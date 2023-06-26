@@ -4,9 +4,7 @@
 #include "defs.h"
 #include "os_window.cc"
 #include "os_input.cc"
-
-// TODO: this should move to a gamelib so/dll file.
-#include "game.cc"
+#include "gamelib.cc"
 
 int main(int Argc, char *Args[])
 {
@@ -14,6 +12,13 @@ int main(int Argc, char *Args[])
     printf("[Debug] %d arguments passed. ", Argc);
 #endif
     
+    game_lib GameCode = {};
+    GameCode.LibPath = "../build/libgame.so";
+    if (LoadGameCode(&GameCode) != 0) 
+    {
+        printf("Loading GameCode failed!\n");
+    }
+
     window_state WindowState = {};
     WindowState.Title = "Invaders must die!";
     if (InitWindow(WindowState) == false) {
@@ -30,7 +35,7 @@ int main(int Argc, char *Args[])
 
         // TODO: simulate game
 
-        GameUpdateAndRender(&GameState);
+        GameCode.GameUpdateAndRender(&GameState);
     }
 
     DestroyWindow(WindowState);

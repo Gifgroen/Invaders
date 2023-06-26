@@ -12,7 +12,7 @@ mkdir -p $BASE_DIR/build
 pushd $BASE_DIR/build
 
 # Create Game service
-# $CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -shared -o ./libgame.so -fPIC $BASE_DIR/src/game.cc 
+$CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -shared -o ./libgame.so -fPIC $BASE_DIR/src/game.cc 
 
 # Create platform layer that uses platform agnostic Game
 $CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -o invaders $SDL_FLAGS -fPIC $BASE_DIR/src/main.cc

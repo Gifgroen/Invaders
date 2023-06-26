@@ -5,6 +5,8 @@ struct game_state {
     bool Running;
 };
 
-void GameUpdateAndRender(game_state *GameState);
+extern "C" {
+    void GameUpdateAndRender(game_state *GameState);
+}
 
 #endif
