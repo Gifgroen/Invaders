@@ -11,19 +11,20 @@ int main(int Argc, char *Args[])
 #if DEBUG 
     printf("[Debug] %d arguments passed. ", Argc);
 #endif
-    
-    game_lib GameCode = {};
-    GameCode.LibPath = "../build/libgame.so";
-    if (LoadGameCode(&GameCode) != 0) 
-    {
-        printf("Loading GameCode failed!\n");
-    }
 
     window_state WindowState = {};
     WindowState.Title = "Invaders must die!";
-    if (InitWindow(WindowState) == false) {
+    if (InitWindow(WindowState) == false) 
+    {
         printf("[Error] Initialising the window failed!\n");
         return 1;
+    }
+
+    game_lib GameLib = {};
+    GameLib.LibPath = "../build/libgame.so";
+    if (LoadGameCode(&GameLib) != 0)
+    {
+        printf("Loading GameCode failed!\n");
     }
     
     game_state GameState = {};
@@ -33,9 +34,15 @@ int main(int Argc, char *Args[])
     {
         ProcessInput(&GameState);
 
+        if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime) 
+        {
+            printf("GameCode has changed, reloading!\n");
+            LoadGameCode(&GameLib);
+        }
+
         // TODO: simulate game
 
-        GameCode.GameUpdateAndRender(&GameState);
+        GameLib.GameUpdateAndRender(&GameState);
     }
 
     DestroyWindow(WindowState);
