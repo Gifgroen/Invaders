@@ -2,7 +2,7 @@
 
 #include <SDL2/SDL.h>
 
-void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState) 
+void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
 {
     switch (e->key.keysym.sym)
     {
@@ -12,16 +12,19 @@ void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
     }
 }
 
-void ProcessInput(game_state *GameState) 
+void ProcessInput(game_state *GameState)
 {
     SDL_Event e;
     while (SDL_PollEvent(&e)) 
     {
-        switch(e.type) { 
-            case  SDL_QUIT: {
+        switch(e.type) 
+        { 
+            case  SDL_QUIT: 
+            {
                 GameState->Running = false;
             } break;
-            case SDL_KEYDOWN: {
+            case SDL_KEYDOWN: 
+            {
                 ProcessKeyboardEvents(&e, GameState);
             } break;
         }

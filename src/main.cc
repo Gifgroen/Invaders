@@ -9,7 +9,7 @@
 int main(int Argc, char *Args[])
 {
 #if DEBUG 
-    printf("[Debug] %d arguments passed. ", Argc);
+    printf("[Debug] %d arguments passed. ", Argc - 1);
 #endif
 
     window_state WindowState = {};
@@ -17,14 +17,15 @@ int main(int Argc, char *Args[])
     if (InitWindow(WindowState) == false) 
     {
         printf("[Error] Initialising the window failed!\n");
-        return 1;
+        return -1;
     }
 
     game_lib GameLib = {};
     GameLib.LibPath = "../build/libgame.so";
     if (LoadGameCode(&GameLib) != 0)
     {
-        printf("Loading GameCode failed!\n");
+        printf("[Error] Loading GameCode failed!\n");
+        return -1;
     }
     
     game_state GameState = {};
@@ -36,7 +37,7 @@ int main(int Argc, char *Args[])
 
         if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime) 
         {
-            printf("GameCode has changed, reloading!\n");
+            printf("[Info] GameCode has changed, reloading!\n");
             LoadGameCode(&GameLib);
         }
 
