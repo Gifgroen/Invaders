@@ -3,10 +3,13 @@
 
 #include <SDL2/SDL.h>
 
-struct window_state {
+struct window_state 
+{
     char const * Title;
-    SDL_Window *Window;
-    SDL_Surface *Surface;
+    SDL_Window *Window;   
+    SDL_Renderer *Renderer;
+
+    SDL_Texture *WindowTexture;
 };
 
 #endif

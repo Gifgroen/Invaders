@@ -4,7 +4,7 @@
 #include "defs.h"
 #include "game.h"
 
-typedef void (*GameUpdateAndRender_t)(game_state *);
+typedef void (*GameUpdateAndRender_t)(game_state *, void *, int, int);
 
 struct game_lib
 {

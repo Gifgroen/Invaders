@@ -41,7 +41,7 @@ internal int LoadGameCode(game_lib *GameCode)
     {
         printf("Cannot load required symbol(s) : %s \n", DlSymError);
         dlclose(GameCode->LibHandle);
-        return 1;
+        return -1;
     }
 
     GameCode->LastWriteTime = GameCodeChanged(GameCode);
