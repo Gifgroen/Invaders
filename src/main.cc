@@ -29,6 +29,13 @@ int main(int Argc, char *Args[])
         return -1;
     }
     
+    offscreen_buffer BackBuffer = {};
+    // TODO: connect this size to InitWindow and add resize/SDL expose capabilities.
+    // Note: Add commend line input for -size 1024x768 or similar?
+    BackBuffer.Width = 1024;
+    BackBuffer.Height = 768;
+    BackBuffer.Pixels = (u32*)malloc(BackBuffer.Width * BackBuffer.Height * sizeof(u32));
+
     game_state GameState = {};
     GameState.Running = true;
 
@@ -41,20 +48,14 @@ int main(int Argc, char *Args[])
             printf("[Info] GameCode has changed, reloading!\n");
             LoadGameCode(&GameLib);
         }
-
-        int w, h;
-        SDL_GetWindowSize(WindowState.Window, &w, &h);
-
-        u32 *Pixels = (u32*)malloc(w * h * sizeof(u32));
         
         // TODO: simulate game
-        GameLib.GameUpdateAndRender(&GameState, Pixels, w, h);
+        GameLib.GameUpdateAndRender(&GameState, &BackBuffer);
 
-        UpdateWindow(&WindowState, Pixels);
-
-        free(Pixels);
+        UpdateWindow(&WindowState, BackBuffer.Pixels);
     }
 
     DestroyWindow(&WindowState);
+    DestroyBackBuffer(&BackBuffer);
     return 0;
 }

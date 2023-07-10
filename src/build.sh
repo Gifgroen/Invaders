@@ -1,5 +1,5 @@
 #!/bin/sh
-CC=gcc
+CC=g++
 
 BASE_DIR="${HOME}/Projects/Games/Invaders/"
 

@@ -3,6 +3,13 @@
 
 #include "defs.h"
 
+struct offscreen_buffer 
+{
+    s16 Width; 
+    s16 Height;
+    void *Pixels;
+};
+
 struct game_state 
 {
     bool Running;
@@ -10,7 +17,7 @@ struct game_state
 
 extern "C" 
 {
-    void GameUpdateAndRender(game_state *GameState, void *Pixels, int W, int H);
+    void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer);
 }
 
 #endif

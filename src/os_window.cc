@@ -1,6 +1,7 @@
 #include "os_window.h"
 
 #include <SDL2/SDL.h>
+#include "game.h"
 #include "defs.h"
 
 #define SCREEN_WIDTH 1024
@@ -15,8 +16,9 @@ bool InitWindow(window_state *WindowState)
         return false;
     }   
 
-    u32 WindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
-    WindowState->Window = SDL_CreateWindow(WindowState->Title, 
+    // u32 WindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
+    u32 WindowFlags = SDL_WINDOW_SHOWN;
+    WindowState->Window = SDL_CreateWindow(WindowState->Title,
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
         SCREEN_WIDTH, SCREEN_HEIGHT, WindowFlags);
     if(WindowState->Window == NULL)
@@ -59,6 +61,13 @@ void DestroyWindow(window_state *WindowState)
 
     SDL_DestroyWindow(WindowState->Window);
     WindowState->Window = NULL;
+    
 
     SDL_Quit();
+}
+
+void DestroyBackBuffer(offscreen_buffer *Buffer)
+{
+    free(Buffer->Pixels);
+    Buffer = NULL;
 }
