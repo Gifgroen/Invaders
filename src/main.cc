@@ -15,6 +15,7 @@ int main(int Argc, char *Args[])
 
     window_state WindowState = {};
     WindowState.Title = "Invaders must die!";
+    WindowState.Size = V2(1024, 768);
     if (InitWindow(&WindowState) == false)
     {
         printf("[Error] Initialising the window failed!\n");
@@ -30,18 +31,14 @@ int main(int Argc, char *Args[])
     }
     
     offscreen_buffer BackBuffer = {};
-    // TODO: connect this size to InitWindow and add resize/SDL expose capabilities.
-    // Note: Add commend line input for -size 1024x768 or similar?
-    BackBuffer.Width = 1024;
-    BackBuffer.Height = 768;
-    BackBuffer.Pixels = (u32*)malloc(BackBuffer.Width * BackBuffer.Height * sizeof(u32));
+    UpdateOffscreenBuffer(&WindowState, &BackBuffer);
 
     game_state GameState = {};
     GameState.Running = true;
 
     while (GameState.Running)
     {
-        ProcessInput(&GameState);
+        ProcessInput(&WindowState, &GameState, &BackBuffer);
 
         if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
         {

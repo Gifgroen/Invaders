@@ -2,11 +2,11 @@
 #define GAME_H
 
 #include "defs.h"
+#include "math.cc"
 
 struct offscreen_buffer 
 {
-    s16 Width; 
-    s16 Height;
+    v2 Size;
     void *Pixels;
 };
 

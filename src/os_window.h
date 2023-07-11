@@ -3,9 +3,12 @@
 
 #include <SDL2/SDL.h>
 
+#include "math.h"
+
 struct window_state 
 {
     char const * Title;
+    v2 Size;
     SDL_Window *Window;   
     SDL_Renderer *Renderer;
 

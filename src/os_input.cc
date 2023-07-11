@@ -1,63 +1,27 @@
 #include "os_input.h"
+#include "os_window.h"
 
 #include <SDL2/SDL.h>
 
-void ProcessWindowEvent(SDL_WindowEvent *e)
+void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
 {
+    v2 *NewSize = &WindowState->Size;
     switch (e->event)
     {
-        // Get new dimensions and repaint on window size change
         case SDL_WINDOWEVENT_SIZE_CHANGED:
         {
-            printf("Size Changed: (w: %d, h: %d)\n", e->data1, e->data2);
+            NewSize->Width = e->data1;
+            NewSize->Height = e->data2;
+            UpdateOffscreenBuffer(WindowState, BackBuffer);
         } break;
 
-        // Repaint on exposure
         case SDL_WINDOWEVENT_EXPOSED:
         {
-            printf("Exposed\n");
-        } break;
-
-        // Mouse entered window
-        case SDL_WINDOWEVENT_ENTER:
-        {
-            printf("Enter\n");
-        } break;
-        
-        // Mouse left window
-        case SDL_WINDOWEVENT_LEAVE:
-        {
-            printf("Leave\n");
-        } break;
-
-        // Window has keyboard focus
-        case SDL_WINDOWEVENT_FOCUS_GAINED:
-        {
-            printf("Focus gained\n");   
-        } break;
-
-        // Window lost keyboard focus
-        case SDL_WINDOWEVENT_FOCUS_LOST:
-        {
-            printf("Focus lost\n");
-        } break;
-
-        // Window minimized
-        case SDL_WINDOWEVENT_MINIMIZED:
-        {
-            printf("Minimised\n");
-        } break;
-
-        // Window maximized
-        case SDL_WINDOWEVENT_MAXIMIZED:
-        {
-            printf("Maximised\n");
-        } break;
-        
-        // Window restored
-        case SDL_WINDOWEVENT_RESTORED:
-        {
-            printf("Restored\n");
+            int W, H;
+            SDL_GetWindowSize(WindowState->Window, &W, &H);
+            NewSize->Width = W;
+            NewSize->Height = H;
+            UpdateOffscreenBuffer(WindowState, BackBuffer);
         } break;
     }
 }
@@ -73,7 +37,7 @@ void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
     }
 }
 
-void ProcessInput(game_state *GameState)
+void ProcessInput(window_state *WindowState, game_state *GameState, offscreen_buffer *BackBuffer)
 {
     SDL_Event e;
     while (SDL_PollEvent(&e))
@@ -82,7 +46,7 @@ void ProcessInput(game_state *GameState)
         {
             case SDL_WINDOWEVENT:
             {
-                ProcessWindowEvent(&e.window);
+                ProcessWindowEvent(&e.window, WindowState, BackBuffer);
             } break;
 
             case SDL_QUIT:
