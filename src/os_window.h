@@ -3,10 +3,16 @@
 
 #include <SDL2/SDL.h>
 
-struct window_state {
+#include "math.h"
+
+struct window_state 
+{
     char const * Title;
-    SDL_Window *Window;
-    SDL_Surface *Surface;
+    v2 Size;
+    SDL_Window *Window;   
+    SDL_Renderer *Renderer;
+
+    SDL_Texture *WindowTexture;
 };
 
 #endif

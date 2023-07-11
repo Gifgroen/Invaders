@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
 
 #include "defs.h"
@@ -14,7 +15,8 @@ int main(int Argc, char *Args[])
 
     window_state WindowState = {};
     WindowState.Title = "Invaders must die!";
-    if (InitWindow(WindowState) == false) 
+    WindowState.Size = V2(1024, 768);
+    if (InitWindow(&WindowState) == false)
     {
         printf("[Error] Initialising the window failed!\n");
         return -1;
@@ -28,24 +30,29 @@ int main(int Argc, char *Args[])
         return -1;
     }
     
+    offscreen_buffer BackBuffer = {};
+    UpdateOffscreenBuffer(&WindowState, &BackBuffer);
+
     game_state GameState = {};
     GameState.Running = true;
 
-    while (GameState.Running) 
+    while (GameState.Running)
     {
-        ProcessInput(&GameState);
+        ProcessInput(&WindowState, &GameState, &BackBuffer);
 
-        if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime) 
+        if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
         {
             printf("[Info] GameCode has changed, reloading!\n");
             LoadGameCode(&GameLib);
         }
-
+        
         // TODO: simulate game
+        GameLib.GameUpdateAndRender(&GameState, &BackBuffer);
 
-        GameLib.GameUpdateAndRender(&GameState);
+        UpdateWindow(&WindowState, BackBuffer.Pixels);
     }
 
-    DestroyWindow(WindowState);
+    DestroyWindow(&WindowState);
+    DestroyBackBuffer(&BackBuffer);
     return 0;
 }

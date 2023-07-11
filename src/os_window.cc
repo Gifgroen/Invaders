@@ -1,39 +1,92 @@
 #include "os_window.h"
 
 #include <SDL2/SDL.h>
+#include "game.h"
 #include "defs.h"
 
-#define SCREEN_WIDTH 1024
-#define SCREEN_HEIGHT 768
-
-bool InitWindow(window_state WindowState)
+bool InitWindow(window_state *WindowState)
 {
     u32 InitFlags = SDL_INIT_VIDEO;
     if(SDL_Init(InitFlags) < 0)
     {
-        printf("Init failed!");
+        printf("Init failed! %s\n", SDL_GetError());
         return false;
     }   
 
-    WindowState.Window = SDL_CreateWindow(WindowState.Title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-    if(WindowState.Window == NULL)
+    v2 Size = WindowState->Size;
+    u32 WindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
+    WindowState->Window = SDL_CreateWindow(WindowState->Title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Size.Width, Size.Height, WindowFlags);
+    if(WindowState->Window == NULL)
     {
-        printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
         return false;
     }
-    
-    WindowState.Surface = SDL_GetWindowSurface(WindowState.Window);
+
+    WindowState->Renderer = SDL_CreateRenderer(WindowState->Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if(WindowState->Renderer == NULL)
+    {
+        printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+        return false;
+    }
+
+    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Size.Width, Size.Height);
+    if(WindowState->WindowTexture == NULL)
+    {
+        printf("WindowTexture could not be created! SDL Error: %s\n", SDL_GetError());
+        return false;
+    }
 
     return true;
 }
 
-void DestroyWindow(window_state WindowState)
+void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
 {
-    SDL_FreeSurface(WindowState.Surface);
-    WindowState.Surface = NULL;
+    if (WindowState->WindowTexture) 
+    {
+        SDL_DestroyTexture(WindowState->WindowTexture);
+        WindowState->WindowTexture = NULL;
+    }
 
-    SDL_DestroyWindow(WindowState.Window);
-    WindowState.Window = NULL;
+    if (Buffer->Pixels)
+    {   
+        free(Buffer->Pixels);
+    }
+
+    printf("Update BackBuffer to new Size = (%d, %d)\n", WindowState->Size.Width, WindowState->Size.Height);
+    v2 Size = WindowState->Size;
+    u32 Width = Size.Width;
+    u32 Height = Size.Height;
+    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Width, Height);
+
+    Buffer->Size = Size;
+
+    Buffer->Pixels = malloc(Width * Height * sizeof(u32));
+}
+
+void UpdateWindow(window_state *WindowState, void const *Pixels)
+{
+    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, 4);
+    SDL_RenderCopy(WindowState->Renderer, WindowState->WindowTexture, 0, 0);
+    SDL_RenderPresent(WindowState->Renderer);
+}
+
+void DestroyWindow(window_state *WindowState)
+{
+    SDL_DestroyTexture(WindowState->WindowTexture);
+    WindowState->WindowTexture = NULL;
+
+    SDL_DestroyRenderer(WindowState->Renderer);
+    WindowState->Renderer = NULL;
+
+    SDL_DestroyWindow(WindowState->Window);
+    WindowState->Window = NULL;
+    
 
     SDL_Quit();
+}
+
+void DestroyBackBuffer(offscreen_buffer *Buffer)
+{
+    free(Buffer->Pixels);
+    Buffer->Pixels = NULL;
 }
