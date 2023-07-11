@@ -10,9 +10,6 @@
 #include "gamelib.cc"
 #include "framerate.cc"
 
-#include <x86intrin.h>
-
-// Enforce Framerate
 internal int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
@@ -66,7 +63,7 @@ int main(int Argc, char *Args[])
     {
         printf("Device capable refresh rate is %d Hz, but Game runs in %d Hz\n", DetectedFrameRate, GameUpdateHz);
     }
-    // Tickt per second for this CPU.
+    // Ticks per second for this CPU.
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
 
     // Administration to enforce a framerate of GameUpdateHz
@@ -97,16 +94,19 @@ int main(int Argc, char *Args[])
         /// Profiling
         ///
 
-        // Time 
-        u64 ElapsedTime = EndTime - StartTime;
         // Cycles
         u64 EndCycleCount = _rdtsc();
         u64 CycleCount = EndCycleCount - StartCycleCount;
+        // Accumulate
+        u64 ElapsedTime = EndTime - StartTime;
 
         /// Visualise
-        // Cycles devided by a million = Mega Cycles per frame.
+        // Time: Convert frametime in (ms/f)
         real64 MSPF = (1000.0f * (real64)ElapsedTime) / (real64)PerfCountFrequency;
+        // FPS: compare CPU counter with ticks per seconds to Rate (f/s)
         real64 FPS = (real64)PerfCountFrequency / (real64)ElapsedTime;
+
+        // Cycles devided by a million = Mega Cycles per frame (mc/f).
         real64 MCPF = ((real64)CycleCount / (1000.0f * 1000.0f));
         printf("Time: %.02fms/f, FPS: %.02ff/s, Cycles: %.02fmc/f\n", MSPF, FPS, MCPF);
         StartCycleCount = EndCycleCount;
