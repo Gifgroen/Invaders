@@ -28,11 +28,17 @@ void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen
 
 void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
 {
-    switch (e->key.keysym.sym)
+    SDL_KeyboardEvent Key = e->key;
+    switch (Key.keysym.sym)
     {
         case SDLK_ESCAPE:
         {
             GameState->Running = false;
+        } break;
+
+        default: {
+            // TODO process...
+            printf("Pressed key = %s, repeat = %d\n", SDL_GetKeyName(Key.keysym.sym), Key.repeat);
         } break;
     }
 }
@@ -54,6 +60,7 @@ void ProcessInput(window_state *WindowState, game_state *GameState, offscreen_bu
                 GameState->Running = false;
             } break;
 
+            case SDL_KEYUP:
             case SDL_KEYDOWN:
             {
                 ProcessKeyboardEvents(&e, GameState);
