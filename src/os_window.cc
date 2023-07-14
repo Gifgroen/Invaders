@@ -6,7 +6,7 @@
 
 bool InitWindow(window_state *WindowState)
 {
-    u32 InitFlags = SDL_INIT_VIDEO;
+    u32 InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER;
     if(SDL_Init(InitFlags) < 0)
     {
         printf("Init failed! %s\n", SDL_GetError());

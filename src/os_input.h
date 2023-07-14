@@ -13,6 +13,9 @@ struct game_button_state
 struct game_controller
 {
     bool IsConnected;
+    bool IsAnalog;
+    real32 StickAverageX;
+    real32 StickAverageY;
 
     union 
     {
@@ -29,6 +32,7 @@ struct game_controller
 
 struct game_input
 {
+    game_controller Keyboards[1];
     game_controller Controllers[1];
 };
 

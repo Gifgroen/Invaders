@@ -10,8 +10,6 @@
 #include "gamelib.cc"
 #include "framerate.cc"
 
-#define ArrayCount(Array) (sizeof(Array)/sizeof(*(Array)))
-
 internal int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
@@ -66,11 +64,12 @@ int main(int Argc, char *Args[])
         printf("Device capable refresh rate is %d Hz, but Game runs in %d Hz\n", DetectedFrameRate, GameUpdateHz);
     }
 
+    // Setup Input
     game_input Input[2] = {};
     game_input *OldInput = &Input[0];
-    // *OldInput = {};
     game_input *NewInput = &Input[1];
-    // *NewInput = {};
+    // Controllers
+    OpenInputControllers();
     
     // Ticks per second for this CPU.
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
@@ -81,9 +80,9 @@ int main(int Argc, char *Args[])
 
     while (GameState.Running)
     {
-        game_controller *OldKeyboardController = GetControllerForIndex(OldInput, 0);
-        game_controller *NewKeyboardController = GetControllerForIndex(NewInput, 0);
-        *NewKeyboardController = {};
+        game_controller *OldKeyboardController = GetKeyboardForIndex(OldInput, 0);
+        game_controller *NewKeyboardController = GetKeyboardForIndex(NewInput, 0);
+        // *NewKeyboardController = {};
         for(u64 ButtonIndex = 0; ButtonIndex < ArrayCount(NewKeyboardController->Buttons); ++ButtonIndex)
         {
             game_button_state *NewButtons = &(NewKeyboardController->Buttons[ButtonIndex]);
@@ -110,11 +109,11 @@ int main(int Argc, char *Args[])
                 case SDL_KEYUP:
                 case SDL_KEYDOWN:
                 {
-                    ProcessKeyboardEvents(&e, &GameState, &NewInput->Controllers[0]);
+                    ProcessKeyboardEvents(&e, &GameState, NewKeyboardController);
                 } break;
             }
         }
-
+        HandleControllerEvents(OldInput, NewInput);
 
         if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
         {
