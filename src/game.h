@@ -3,6 +3,7 @@
 
 #include "defs.h"
 #include "math.cc"
+#include "os_input.h"
 
 struct offscreen_buffer 
 {
@@ -17,7 +18,7 @@ struct game_state
 
 extern "C" 
 {
-    void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer);
+    void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input);
 }
 
 #endif

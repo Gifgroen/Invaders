@@ -3,8 +3,9 @@
 
 #include "defs.h"
 #include "game.h"
+#include "os_input.h"
 
-typedef void (*GameUpdateAndRender_t)(game_state *, offscreen_buffer *);
+typedef void (*GameUpdateAndRender_t)(game_state *, offscreen_buffer *, game_input*);
 
 struct game_lib
 {

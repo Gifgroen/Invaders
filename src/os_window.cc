@@ -6,7 +6,7 @@
 
 bool InitWindow(window_state *WindowState)
 {
-    u32 InitFlags = SDL_INIT_VIDEO;
+    u32 InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER;
     if(SDL_Init(InitFlags) < 0)
     {
         printf("Init failed! %s\n", SDL_GetError());
@@ -61,6 +61,29 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     Buffer->Size = Size;
 
     Buffer->Pixels = malloc(Width * Height * sizeof(u32));
+}
+
+void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
+{
+    v2 *NewSize = &WindowState->Size;
+    switch (e->event)
+    {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+        {
+            NewSize->Width = e->data1;
+            NewSize->Height = e->data2;
+            UpdateOffscreenBuffer(WindowState, BackBuffer);
+        } break;
+
+        case SDL_WINDOWEVENT_EXPOSED:
+        {
+            int W, H;
+            SDL_GetWindowSize(WindowState->Window, &W, &H);
+            NewSize->Width = W;
+            NewSize->Height = H;
+            UpdateOffscreenBuffer(WindowState, BackBuffer);
+        } break;
+    }
 }
 
 void UpdateWindow(window_state *WindowState, void const *Pixels)

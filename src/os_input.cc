@@ -1,63 +1,161 @@
 #include "os_input.h"
-#include "os_window.h"
 
-#include <SDL2/SDL.h>
+#define MAX_CONTROLLER_COUNT 1
+global SDL_GameController *ControllerHandles[MAX_CONTROLLER_COUNT];
 
-void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
+game_controller *GetKeyboardForIndex(game_input *Input, int Index)
 {
-    v2 *NewSize = &WindowState->Size;
-    switch (e->event)
-    {
-        case SDL_WINDOWEVENT_SIZE_CHANGED:
-        {
-            NewSize->Width = e->data1;
-            NewSize->Height = e->data2;
-            UpdateOffscreenBuffer(WindowState, BackBuffer);
-        } break;
+    game_controller *Result = &(Input->Keyboards[Index]);
+    return Result;
+}
 
-        case SDL_WINDOWEVENT_EXPOSED:
+game_controller *GetControllerForIndex(game_input *Input, int Index)
+{
+    game_controller *Result = &(Input->Controllers[Index]);
+    return Result;
+}
+
+internal void OpenInputControllers() 
+{
+    for (int ControllerIndex = 0; ControllerIndex < SDL_NumJoysticks(); ++ControllerIndex)
+    {
+        if (ControllerIndex == ArrayCount(ControllerHandles)) 
         {
-            int W, H;
-            SDL_GetWindowSize(WindowState->Window, &W, &H);
-            NewSize->Width = W;
-            NewSize->Height = H;
-            UpdateOffscreenBuffer(WindowState, BackBuffer);
-        } break;
+            break;
+        }
+        if (!SDL_IsGameController(ControllerIndex))
+        { 
+            continue; 
+        }
+
+        ControllerHandles[ControllerIndex] = SDL_GameControllerOpen(ControllerIndex);
     }
 }
 
-void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
+void ProcessKeyEvent(game_button_state *State, bool Value)
 {
-    switch (e->key.keysym.sym)
+    State->IsDown = Value;
+    State->HalfTransitionCount++;
+}
+
+void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState, game_controller *KeyboardInput)
+{
+    SDL_KeyboardEvent Key = e->key;
+    if (Key.repeat != 0) {
+        return;
+    }
+
+    bool IsDown = Key.state == SDL_PRESSED;
+
+    switch (Key.keysym.sym)
     {
         case SDLK_ESCAPE:
         {
             GameState->Running = false;
         } break;
+
+        case SDLK_UP:
+        case SDLK_w:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveUp), IsDown);
+        } break;
+
+        case SDLK_LEFT:
+        case SDLK_a:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveLeft), IsDown);
+        } break;
+
+        case SDLK_DOWN:
+        case SDLK_s:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveDown), IsDown);
+        } break;
+
+        case SDLK_RIGHT:
+        case SDLK_d:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveRight), IsDown);
+        } break;
+
+        default: {
+            // TODO process...
+            printf("Pressed key = %s, repeat = %d\n", SDL_GetKeyName(Key.keysym.sym), Key.repeat);
+        } break;
     }
 }
 
-void ProcessInput(window_state *WindowState, game_state *GameState, offscreen_buffer *BackBuffer)
+internal void ProcessGameControllerButton(game_button_state *OldState, game_button_state *NewState, bool Value)
 {
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
+    NewState->IsDown = Value;
+    NewState->HalfTransitionCount += ((NewState->IsDown == OldState->IsDown) ? 0 : 1);
+}
+
+internal real32 ProcessGameControllerAxisValue(s16 Value, s16 DeadZoneThreshold)
+{
+    real32 Result = 0;
+
+    if(Value < -DeadZoneThreshold)
     {
-        switch(e.type)
+        Result = (real32)((Value + DeadZoneThreshold) / (32768.0f - DeadZoneThreshold));
+    }
+    else if(Value > DeadZoneThreshold)
+    {
+        Result = (real32)((Value - DeadZoneThreshold) / (32767.0f - DeadZoneThreshold));
+    }
+
+    return(Result);
+}
+
+void HandleControllerEvents(game_input *OldInput, game_input *NewInput)
+{
+    for (int ControllerIndex = 0; ControllerIndex < MAX_CONTROLLER_COUNT; ++ControllerIndex)
+    {
+        SDL_GameController *Controller = ControllerHandles[ControllerIndex];
+        if(Controller != 0 && SDL_GameControllerGetAttached(Controller))
         {
-            case SDL_WINDOWEVENT:
-            {
-                ProcessWindowEvent(&e.window, WindowState, BackBuffer);
-            } break;
+            game_controller *OldController = GetControllerForIndex(OldInput, ControllerIndex);
+            game_controller *NewController = GetControllerForIndex(NewInput, ControllerIndex);
 
-            case SDL_QUIT:
-            {
-                GameState->Running = false;
-            } break;
+            // Sticks
+            NewController->StickAverageX = ProcessGameControllerAxisValue(SDL_GameControllerGetAxis(ControllerHandles[ControllerIndex], SDL_CONTROLLER_AXIS_LEFTX), 1);
+            NewController->StickAverageY = -ProcessGameControllerAxisValue(SDL_GameControllerGetAxis(ControllerHandles[ControllerIndex], SDL_CONTROLLER_AXIS_LEFTY), 1);
 
-            case SDL_KEYDOWN:
+            if((NewController->StickAverageX != 0.0f) || (NewController->StickAverageY != 0.0f))
             {
-                ProcessKeyboardEvents(&e, GameState);
-            } break;
+                NewController->IsAnalog = true;
+            }
+
+            if(SDL_GameControllerGetButton(ControllerHandles[ControllerIndex], SDL_CONTROLLER_BUTTON_DPAD_UP))
+            {
+                NewController->StickAverageY = -1.0f;
+                NewController->IsAnalog = false;
+            }
+
+            if(SDL_GameControllerGetButton(ControllerHandles[ControllerIndex], SDL_CONTROLLER_BUTTON_DPAD_RIGHT))
+            {
+                NewController->StickAverageX = 1.0f;
+                NewController->IsAnalog = false;
+            }
+
+            if(SDL_GameControllerGetButton(ControllerHandles[ControllerIndex], SDL_CONTROLLER_BUTTON_DPAD_DOWN))
+            {
+                NewController->StickAverageY = 1.0f;
+                NewController->IsAnalog = false;
+            }
+
+            if(SDL_GameControllerGetButton(ControllerHandles[ControllerIndex], SDL_CONTROLLER_BUTTON_DPAD_LEFT))
+            {
+                NewController->StickAverageX = -1.0f;
+                NewController->IsAnalog = false;
+            }
+
+            // emulated Stick average for D-pad movement usage
+            real32 Threshold = 0.5f;
+            ProcessGameControllerButton(&(OldController->MoveUp), &(NewController->MoveUp), NewController->StickAverageY > Threshold);
+            ProcessGameControllerButton(&(OldController->MoveRight), &(NewController->MoveRight), NewController->StickAverageX > Threshold);
+            ProcessGameControllerButton(&(OldController->MoveDown), &(NewController->MoveDown), NewController->StickAverageY < -Threshold);
+            ProcessGameControllerButton(&(OldController->MoveLeft), &(NewController->MoveLeft), NewController->StickAverageX < -Threshold);
         }
     }
 }
