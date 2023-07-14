@@ -1,34 +1,26 @@
 #include "os_input.h"
-#include "os_window.h"
 
-#include <SDL2/SDL.h>
-
-void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
+game_controller *GetControllerForIndex(game_input *Input, int Index)
 {
-    v2 *NewSize = &WindowState->Size;
-    switch (e->event)
-    {
-        case SDL_WINDOWEVENT_SIZE_CHANGED:
-        {
-            NewSize->Width = e->data1;
-            NewSize->Height = e->data2;
-            UpdateOffscreenBuffer(WindowState, BackBuffer);
-        } break;
-
-        case SDL_WINDOWEVENT_EXPOSED:
-        {
-            int W, H;
-            SDL_GetWindowSize(WindowState->Window, &W, &H);
-            NewSize->Width = W;
-            NewSize->Height = H;
-            UpdateOffscreenBuffer(WindowState, BackBuffer);
-        } break;
-    }
+    game_controller *Result = &(Input->Controllers[Index]);
+    return Result;
 }
 
-void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
+void ProcessKeyEvent(game_button_state *State, bool IsDown)
+{
+    State->IsDown = IsDown;
+    State->HalfTransitionCount = State->IsDown != IsDown ? 1 : 0;
+}
+
+void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState, game_controller *KeyboardInput)
 {
     SDL_KeyboardEvent Key = e->key;
+    if (Key.repeat != 0) {
+        return;
+    }
+
+    bool IsDown = Key.state == SDL_PRESSED;
+
     switch (Key.keysym.sym)
     {
         case SDLK_ESCAPE:
@@ -36,35 +28,33 @@ void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState)
             GameState->Running = false;
         } break;
 
+        case SDLK_UP:
+        case SDLK_w:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveUp), IsDown);
+        } break;
+
+        case SDLK_LEFT:
+        case SDLK_a:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveLeft), IsDown);
+        } break;
+
+        case SDLK_DOWN:
+        case SDLK_s:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveDown), IsDown);
+        } break;
+
+        case SDLK_RIGHT:
+        case SDLK_d:
+        {
+            ProcessKeyEvent(&(KeyboardInput->MoveRight), IsDown);
+        } break;
+
         default: {
             // TODO process...
             printf("Pressed key = %s, repeat = %d\n", SDL_GetKeyName(Key.keysym.sym), Key.repeat);
         } break;
-    }
-}
-
-void ProcessInput(window_state *WindowState, game_state *GameState, offscreen_buffer *BackBuffer)
-{
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
-    {
-        switch(e.type)
-        {
-            case SDL_WINDOWEVENT:
-            {
-                ProcessWindowEvent(&e.window, WindowState, BackBuffer);
-            } break;
-
-            case SDL_QUIT:
-            {
-                GameState->Running = false;
-            } break;
-
-            case SDL_KEYUP:
-            case SDL_KEYDOWN:
-            {
-                ProcessKeyboardEvents(&e, GameState);
-            } break;
-        }
     }
 }

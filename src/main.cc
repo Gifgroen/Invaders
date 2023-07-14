@@ -10,6 +10,8 @@
 #include "gamelib.cc"
 #include "framerate.cc"
 
+#define ArrayCount(Array) (sizeof(Array)/sizeof(*(Array)))
+
 internal int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
@@ -63,6 +65,13 @@ int main(int Argc, char *Args[])
     {
         printf("Device capable refresh rate is %d Hz, but Game runs in %d Hz\n", DetectedFrameRate, GameUpdateHz);
     }
+
+    game_input Input[2] = {};
+    game_input *OldInput = &Input[0];
+    // *OldInput = {};
+    game_input *NewInput = &Input[1];
+    // *NewInput = {};
+    
     // Ticks per second for this CPU.
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
 
@@ -72,7 +81,40 @@ int main(int Argc, char *Args[])
 
     while (GameState.Running)
     {
-        ProcessInput(&WindowState, &GameState, &BackBuffer);
+        game_controller *OldKeyboardController = GetControllerForIndex(OldInput, 0);
+        game_controller *NewKeyboardController = GetControllerForIndex(NewInput, 0);
+        *NewKeyboardController = {};
+        for(u64 ButtonIndex = 0; ButtonIndex < ArrayCount(NewKeyboardController->Buttons); ++ButtonIndex)
+        {
+            game_button_state *NewButtons = &(NewKeyboardController->Buttons[ButtonIndex]);
+            game_button_state *OldButtons = &(OldKeyboardController->Buttons[ButtonIndex]);
+            NewButtons->IsDown = OldButtons->IsDown;
+            NewButtons->HalfTransitionCount = OldButtons->HalfTransitionCount;
+        }
+        
+        SDL_Event e;
+        while (SDL_PollEvent(&e))
+        {
+            switch(e.type)
+            {
+                case SDL_WINDOWEVENT:
+                {
+                    ProcessWindowEvent(&e.window, &WindowState, &BackBuffer);
+                } break;
+
+                case SDL_QUIT:
+                {
+                    GameState.Running = false;
+                } break;
+
+                case SDL_KEYUP:
+                case SDL_KEYDOWN:
+                {
+                    ProcessKeyboardEvents(&e, &GameState, &NewInput->Controllers[0]);
+                } break;
+            }
+        }
+
 
         if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
         {
@@ -81,7 +123,7 @@ int main(int Argc, char *Args[])
         }
         
         // TODO: simulate game
-        GameLib.GameUpdateAndRender(&GameState, &BackBuffer);
+        GameLib.GameUpdateAndRender(&GameState, &BackBuffer, NewInput);
 
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 
@@ -89,6 +131,11 @@ int main(int Argc, char *Args[])
         u64 EndTime = SDL_GetPerformanceCounter();
 
         UpdateWindow(&WindowState, BackBuffer.Pixels);
+
+        game_input *Tmp = OldInput;
+        OldInput = NewInput;
+        NewInput = Tmp;
+        *NewInput = {};
 
         /// 
         /// Profiling

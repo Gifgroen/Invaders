@@ -63,6 +63,29 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     Buffer->Pixels = malloc(Width * Height * sizeof(u32));
 }
 
+void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
+{
+    v2 *NewSize = &WindowState->Size;
+    switch (e->event)
+    {
+        case SDL_WINDOWEVENT_SIZE_CHANGED:
+        {
+            NewSize->Width = e->data1;
+            NewSize->Height = e->data2;
+            UpdateOffscreenBuffer(WindowState, BackBuffer);
+        } break;
+
+        case SDL_WINDOWEVENT_EXPOSED:
+        {
+            int W, H;
+            SDL_GetWindowSize(WindowState->Window, &W, &H);
+            NewSize->Width = W;
+            NewSize->Height = H;
+            UpdateOffscreenBuffer(WindowState, BackBuffer);
+        } break;
+    }
+}
+
 void UpdateWindow(window_state *WindowState, void const *Pixels)
 {
     SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, 4);
