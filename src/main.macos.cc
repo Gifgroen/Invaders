@@ -43,7 +43,7 @@ int main(int Argc, char *Args[])
     }
 
     game_lib GameLib = {};
-    GameLib.LibPath = "../build/libgame.so";
+    GameLib.LibPath = "../build/macos/libgame.so";
     if (LoadGameCode(&GameLib) != 0)
     {
         printf("[Error] Loading GameCode failed!\n");

@@ -1,7 +1,7 @@
 #ifndef OS_WINDOW_H
 #define OS_WINDOW_H
 
-#include <SDL2/SDL.h>
+#include "SDL.h"
 
 #include "math.h"
 
