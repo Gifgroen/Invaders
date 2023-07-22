@@ -1,6 +1,12 @@
 #include "framerate.h"
 
+#if defined(PLATFORM_WIN)
+#include "SDL.h"
+#elif defined(PLATFORM_MACOS)
 #include <SDL2/SDL.h>
+#else
+// TODO: Assert and crash?
+#endif
 
 internal real32 GetSecondsElapsed(u64 OldCounter, u64 CurrentCounter)
 {
