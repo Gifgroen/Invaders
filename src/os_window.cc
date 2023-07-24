@@ -1,4 +1,5 @@
 #include "os_window.h"
+#include <iostream>
 
 #include "game.h"
 #include "defs.h"
