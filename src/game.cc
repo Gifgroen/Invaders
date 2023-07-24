@@ -30,7 +30,7 @@ void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_i
                 }
                 else if (Keyboard->MoveLeft.IsDown || Controller->MoveLeft.IsDown)
                 {
-                    *Pixel = 0xFFFF0000;
+                    *Pixel = 0xFF0000FF;
                 }
                 else if (Keyboard->MoveDown.IsDown || Controller->MoveDown.IsDown)
                 {
@@ -38,7 +38,7 @@ void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_i
                 }
                 else if (Keyboard->MoveRight.IsDown || Controller->MoveRight.IsDown)
                 {
-                    *Pixel = 0xFF0000FF;
+                    *Pixel = 0xFFFF0000;
                 } 
                 else 
                 {
