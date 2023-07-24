@@ -1,35 +1,70 @@
 #include "gamelib.h"
 
-#include <stdlib.h>
+#include <iostream>
 #include <stdio.h>
 
+#if defined(PLATFORM_WIN)
+#include <windows.h>
+#elif defined(PLATFORM_MACOS)
 #include <dlfcn.h>
 #include <sys/stat.h>
+#else 
+// TODO: assert and crash?
+#endif
 
-// GameCode
 internal s64 GameCodeChanged(game_lib *GameCode) 
 {
     char const *Filename = GameCode->LibPath;
     struct stat Result;
-    if (stat(Filename, &Result) == 0) 
+    if (stat(Filename, &Result) == 0)
     {
         return Result.st_mtime;
     }
     return 0;
 }
 
+#if defined(PLATFORM_WIN)
 internal int LoadGameCode(game_lib *GameCode)
 {
-    if (GameCode->LibHandle) 
+    std::cout << "LoadGameCode: at path = " << GameCode->LibPath << std::endl;
+    if (GameCode->LibHandle)
+    {
+        std::cout << "Free." << std::endl;
+        FreeLibrary((HMODULE)GameCode->LibHandle);
+        GameCode->LibHandle = NULL;
+        std::cout << "Cleared loaded Library." << std::endl;
+    }
+
+    GameCode->LibHandle = LoadLibrary(GameCode->LibPath);
+    if (!GameCode->LibHandle)
+    {
+        std::cout << "Cannot open library: " << GetLastError() << std::endl;
+        return -1;
+    }
+
+    GameCode->GameUpdateAndRender = (GameUpdateAndRender_t)GetProcAddress((HMODULE)GameCode->LibHandle, "GameUpdateAndRender");
+    if (GameCode->GameUpdateAndRender == NULL)
+    {
+        std::cout << "Cannot load required symbol(s): " << GetLastError() << std::endl;
+        FreeLibrary((HMODULE)GameCode->LibHandle);
+        return -1;
+    }
+    GameCode->LastWriteTime = GameCodeChanged(GameCode);
+    return 0;
+}
+#elif defined(PLATFORM_MACOS)
+internal int LoadGameCode(game_lib *GameCode)
+{
+    if (GameCode->LibHandle)
     {
         dlclose(GameCode->LibHandle);
         GameCode->LibHandle = NULL;
     }
 
     GameCode->LibHandle = dlopen(GameCode->LibPath, RTLD_LAZY);
-    if (!GameCode->LibHandle) 
+    if (!GameCode->LibHandle)
     {
-        printf("Cannot open library: %s\n", dlerror());
+        std::cout << "Cannot open library: " << dlerror() << std::endl;
         return -1;
     }
 
@@ -37,9 +72,9 @@ internal int LoadGameCode(game_lib *GameCode)
     GameCode->GameUpdateAndRender = (GameUpdateAndRender_t)dlsym(GameCode->LibHandle, "GameUpdateAndRender");
 
     char const *DlSymError = dlerror();
-    if (DlSymError) 
+    if (DlSymError)
     {
-        printf("Cannot load required symbol(s) : %s \n", DlSymError);
+        std::cout << "Cannot load required symbol(s): " << DlSymError << std::endl;
         dlclose(GameCode->LibHandle);
         return -1;
     }
@@ -48,3 +83,6 @@ internal int LoadGameCode(game_lib *GameCode)
 
     return 0;
 }
+#else 
+// Assert and crash?
+#endif

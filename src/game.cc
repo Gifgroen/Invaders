@@ -1,12 +1,16 @@
 #include "game.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "os_input.h"
 
 void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input)
 {
+    if (!GameState->IsInitialised)
+    {
+        GameState->IsInitialised = true;
+    }
+
     for (u32 i = 0; i < ArrayCount(Input->Keyboards); ++i)
     {
         game_controller *Keyboard = &Input->Keyboards[i];

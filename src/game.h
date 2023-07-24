@@ -14,11 +14,12 @@ struct offscreen_buffer
 struct game_state 
 {
     bool Running;
+    bool IsInitialised;
 };
 
 extern "C" 
 {
-    void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input);
+    __declspec(dllexport) void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input);
 }
 
 #endif

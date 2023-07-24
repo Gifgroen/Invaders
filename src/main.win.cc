@@ -11,7 +11,7 @@
 #include "defs.h"
 #include "os_window.cc"
 #include "os_input.cc"
-// #include "gamelib.cc"
+#include "gamelib.cc"
 #include "framerate.cc"
 
 internal int GetWindowRefreshRate(SDL_Window *Window)
@@ -46,19 +46,19 @@ int wmain(int Argc, char *Argv[])
         return -1;
     }
 
-    /* TODO */ 
-    // game_lib GameLib = {};
-    // GameLib.LibPath = "../build/macos/libgame.so";
-    // if (LoadGameCode(&GameLib) != 0)
-    // {
-    //     printf("[Error] Loading GameCode failed!\n");
-    //     return -1;
-    // }
+    game_lib GameLib = {};
+    GameLib.LibPath = "../build/win/libgame.dll";
+    if (LoadGameCode(&GameLib) != 0)
+    {
+        printf("[Error] Loading GameCode failed!\n");
+        return -1;
+    }
 
     offscreen_buffer BackBuffer = {};
     UpdateOffscreenBuffer(&WindowState, &BackBuffer);
 
     game_state GameState = {};
+    GameState.IsInitialised = false;
     GameState.Running = true;
 
     int const GameUpdateHz = 30;
@@ -120,14 +120,14 @@ int wmain(int Argc, char *Argv[])
         }
         HandleControllerEvents(OldInput, NewInput);
 
-        // if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
-        // {
-        //     printf("[Info] GameCode has changed, reloading!\n");
-        //     LoadGameCode(&GameLib);
-        // }
+        if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
+        {
+            printf("[Info] GameCode has changed, reloading!\n");
+            LoadGameCode(&GameLib);
+        }
 
-        // // TODO: simulate game
-        // GameLib.GameUpdateAndRender(&GameState, &BackBuffer, NewInput);
+        // TODO: simulate game
+        GameLib.GameUpdateAndRender(&GameState, &BackBuffer, NewInput);
 
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 
