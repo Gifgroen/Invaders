@@ -17,7 +17,7 @@
 #include "gamelib.cc"
 #include "framerate.cc"
 
-internal int GetWindowRefreshRate(SDL_Window *Window)
+__internal int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
     int DisplayIndex = SDL_GetWindowDisplayIndex(Window);

@@ -19,7 +19,10 @@ struct game_state
 
 extern "C" 
 {
-    __declspec(dllexport) void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input);
+    #if defined(PLATFORM_WIN) 
+    __declspec(dllexport) 
+    #endif
+    void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input);
 }
 
 #endif

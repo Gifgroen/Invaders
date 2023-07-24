@@ -12,7 +12,7 @@
 // TODO: assert and crash?
 #endif
 
-internal s64 GameCodeChanged(game_lib *GameCode) 
+__internal s64 GameCodeChanged(game_lib *GameCode) 
 {
     char const *Filename = GameCode->LibPath;
     struct stat Result;
@@ -24,7 +24,7 @@ internal s64 GameCodeChanged(game_lib *GameCode)
 }
 
 #if defined(PLATFORM_WIN)
-internal int LoadGameCode(game_lib *GameCode)
+__internal int LoadGameCode(game_lib *GameCode)
 {
     std::cout << "LoadGameCode: at path = " << GameCode->LibPath << std::endl;
     if (GameCode->LibHandle)
@@ -53,7 +53,7 @@ internal int LoadGameCode(game_lib *GameCode)
     return 0;
 }
 #elif defined(PLATFORM_MACOS)
-internal int LoadGameCode(game_lib *GameCode)
+__internal int LoadGameCode(game_lib *GameCode)
 {
     if (GameCode->LibHandle)
     {

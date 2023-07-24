@@ -8,12 +8,12 @@
 // TODO: Assert and crash?
 #endif
 
-internal real32 GetSecondsElapsed(u64 OldCounter, u64 CurrentCounter)
+__internal real32 GetSecondsElapsed(u64 OldCounter, u64 CurrentCounter)
 {
     return ((real32)(CurrentCounter - OldCounter) / (real32)(SDL_GetPerformanceFrequency()));
 }
 
-internal void TryWaitForNextFrame(u64 LastCounter, real64 TargetSecondsPerFrame) 
+__internal void TryWaitForNextFrame(u64 LastCounter, real64 TargetSecondsPerFrame) 
 {
     if (GetSecondsElapsed(LastCounter, SDL_GetPerformanceCounter()) < TargetSecondsPerFrame)
     {

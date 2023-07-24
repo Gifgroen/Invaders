@@ -1,7 +1,7 @@
 #include "os_input.h"
 
 #define MAX_CONTROLLER_COUNT 1
-global SDL_GameController *ControllerHandles[MAX_CONTROLLER_COUNT];
+global_variable SDL_GameController *ControllerHandles[MAX_CONTROLLER_COUNT];
 
 game_controller *GetKeyboardForIndex(game_input *Input, int Index)
 {
@@ -15,7 +15,7 @@ game_controller *GetControllerForIndex(game_input *Input, int Index)
     return Result;
 }
 
-internal void OpenInputControllers() 
+__internal void OpenInputControllers() 
 {
     for (int ControllerIndex = 0; ControllerIndex < SDL_NumJoysticks(); ++ControllerIndex)
     {
@@ -85,13 +85,13 @@ void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState, game_controller 
     }
 }
 
-internal void ProcessGameControllerButton(game_button_state *OldState, game_button_state *NewState, bool Value)
+__internal void ProcessGameControllerButton(game_button_state *OldState, game_button_state *NewState, bool Value)
 {
     NewState->IsDown = Value;
     NewState->HalfTransitionCount += ((NewState->IsDown == OldState->IsDown) ? 0 : 1);
 }
 
-internal real32 ProcessGameControllerAxisValue(s16 Value, s16 DeadZoneThreshold)
+__internal real32 ProcessGameControllerAxisValue(s16 Value, s16 DeadZoneThreshold)
 {
     real32 Result = 0;
 
