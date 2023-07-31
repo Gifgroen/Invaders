@@ -16,6 +16,6 @@ struct game_lib
     GameUpdateAndRender_t GameUpdateAndRender;
 };
 
-internal int LoadGameCode(game_lib *GameCode);
+__internal int LoadGameCode(game_lib *GameCode);
 
 #endif // GAMELIB_H

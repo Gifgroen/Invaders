@@ -1,6 +1,6 @@
 #include "os_window.h"
+#include <iostream>
 
-#include <SDL2/SDL.h>
 #include "game.h"
 #include "defs.h"
 
@@ -56,10 +56,11 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     v2 Size = WindowState->Size;
     u32 Width = Size.Width;
     u32 Height = Size.Height;
-    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Width, Height);
+    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Width, Height);
 
     Buffer->Size = Size;
 
+    std::cout << "Texture is " << Width << "x" << Height << std::endl;
     Buffer->Pixels = malloc(Width * Height * sizeof(u32));
 }
 

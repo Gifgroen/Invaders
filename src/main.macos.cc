@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+
+#if defined(PLATFORM_WIN)
+#include "SDL.h"
+#elif defined(PLATFORM_MACOS)
 #include <SDL2/SDL.h>
+#else
+// TODO: Assert and crash?
+#endif
 
 #include <x86intrin.h>
 
@@ -10,7 +17,7 @@
 #include "gamelib.cc"
 #include "framerate.cc"
 
-internal int GetWindowRefreshRate(SDL_Window *Window)
+__internal int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
     int DisplayIndex = SDL_GetWindowDisplayIndex(Window);
@@ -43,7 +50,7 @@ int main(int Argc, char *Args[])
     }
 
     game_lib GameLib = {};
-    GameLib.LibPath = "../build/libgame.so";
+    GameLib.LibPath = "../build/macos/libgame.so";
     if (LoadGameCode(&GameLib) != 0)
     {
         printf("[Error] Loading GameCode failed!\n");

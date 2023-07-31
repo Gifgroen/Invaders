@@ -14,10 +14,14 @@ struct offscreen_buffer
 struct game_state 
 {
     bool Running;
+    bool IsInitialised;
 };
 
 extern "C" 
 {
+    #if defined(PLATFORM_WIN) 
+    __declspec(dllexport) 
+    #endif
     void GameUpdateAndRender(game_state *GameState, offscreen_buffer *Buffer, game_input *Input);
 }
 

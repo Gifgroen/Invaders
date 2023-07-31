@@ -13,8 +13,8 @@ typedef uint64_t u64;
 typedef float real32;
 typedef double real64;
 
-#define global static
-#define internal static
-#define local static
+#define global_variable static
+#define __internal static
+#define __local static
 
 #define ArrayCount(Array) (sizeof(Array)/sizeof(*(Array)))
