@@ -26,7 +26,7 @@ REM Create Game service
 %CC% %COMMON_COMPILER_FLAGS% -LD -Felibgame.dll %BASE_DIR%/src/game.cc %COMMON_LINKER_FLAGS%
 
 REM Create platform binary
-%CC% %COMMON_COMPILER_FLAGS% -I%SDL2_INCLUDE_DIR% %BASE_DIR%src\main.win.cc %COMMON_LINKER_FLAGS%
+%CC% %COMMON_COMPILER_FLAGS% -I%SDL2_INCLUDE_DIR% %BASE_DIR%src\main.cc %COMMON_LINKER_FLAGS%
 
 cp %SDL2_LIB_DIR%\SDL2.dll .
 
