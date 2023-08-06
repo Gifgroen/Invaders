@@ -42,6 +42,7 @@ internal_func int LoadGameCode(game_lib *GameCode)
         return -1;
     }
 
+    GameCode->GameInit = (GameInit_t)GetProcAddress((HMODULE)GameCode->LibHandle, "GameInit");
     GameCode->GameUpdateAndRender = (GameUpdateAndRender_t)GetProcAddress((HMODULE)GameCode->LibHandle, "GameUpdateAndRender");
     if (GameCode->GameUpdateAndRender == NULL)
     {
