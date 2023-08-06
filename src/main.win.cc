@@ -9,12 +9,15 @@
 #endif
 
 #include "defs.h"
+#include "types.h"
+#include "game.h"
+
 #include "os_window.cc"
 #include "os_input.cc"
 #include "gamelib.cc"
 #include "framerate.cc"
 
-__internal int GetWindowRefreshRate(SDL_Window *Window)
+internal_func int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
     int DisplayIndex = SDL_GetWindowDisplayIndex(Window);
@@ -57,9 +60,17 @@ int wmain(int Argc, char *Argv[])
     offscreen_buffer BackBuffer = {};
     UpdateOffscreenBuffer(&WindowState, &BackBuffer);
 
-    game_state GameState = {};
-    GameState.IsInitialised = false;
-    GameState.Running = true;
+    game_memory GameMemory = {};
+    GameMemory.TransientStorageSize = Megabytes(64);
+    GameMemory.PermanentStorageSize = Gigabytes(2);
+    GameMemory.TransientStorage = calloc(GameMemory.TransientStorageSize + GameMemory.PermanentStorageSize, sizeof(u8));
+    GameMemory.PermanentStorage = (u8*)GameMemory.TransientStorage + GameMemory.TransientStorageSize;
+
+    game_state *GameState = (game_state *)GameMemory.TransientStorage;
+    GameState->Running = true;
+
+    // TODO: we need to keep track of a running pointer. I can now rerieve the game_state from the head. 
+    // But I cannot progress the storage without losing what is on it.
 
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
@@ -83,7 +94,7 @@ int wmain(int Argc, char *Argv[])
     u64 StartCycleCount = __rdtsc();
     u64 StartTime = SDL_GetPerformanceCounter();
 
-    while (GameState.Running)
+    while (GameState->Running)
     {
         game_controller *OldKeyboardController = GetKeyboardForIndex(OldInput, 0);
         game_controller *NewKeyboardController = GetKeyboardForIndex(NewInput, 0);
@@ -108,13 +119,13 @@ int wmain(int Argc, char *Argv[])
 
                 case SDL_QUIT:
                 {
-                    GameState.Running = false;
+                    GameState->Running = false;
                 } break;
 
                 case SDL_KEYUP:
                 case SDL_KEYDOWN:
                 {
-                    ProcessKeyboardEvents(&e, &GameState, NewKeyboardController);
+                    ProcessKeyboardEvents(&e, GameState, NewKeyboardController);
                 } break;
             }
         }
@@ -127,7 +138,8 @@ int wmain(int Argc, char *Argv[])
         }
 
         // TODO: simulate game
-        GameLib.GameUpdateAndRender(&GameState, &BackBuffer, NewInput);
+        GameLib.GameUpdateAndRender(&GameMemory, &BackBuffer, NewInput);
+        GameLib.GameUpdateAndRender(&GameMemory, &BackBuffer, NewInput);
 
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 

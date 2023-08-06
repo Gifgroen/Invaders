@@ -9,7 +9,7 @@
 // TODO: Assert and crash?
 #endif
 
-#include "math.h"
+#include "types.h"
 
 struct window_state 
 {

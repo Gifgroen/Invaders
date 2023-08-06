@@ -12,7 +12,7 @@
 // TODO: assert and crash?
 #endif
 
-__internal s64 GameCodeChanged(game_lib *GameCode) 
+internal_func s64 GameCodeChanged(game_lib *GameCode) 
 {
     char const *Filename = GameCode->LibPath;
     struct stat Result;
@@ -24,7 +24,7 @@ __internal s64 GameCodeChanged(game_lib *GameCode)
 }
 
 #if defined(PLATFORM_WIN)
-__internal int LoadGameCode(game_lib *GameCode)
+internal_func int LoadGameCode(game_lib *GameCode)
 {
     std::cout << "LoadGameCode: at path = " << GameCode->LibPath << std::endl;
     if (GameCode->LibHandle)
@@ -53,7 +53,7 @@ __internal int LoadGameCode(game_lib *GameCode)
     return 0;
 }
 #elif defined(PLATFORM_MACOS)
-__internal int LoadGameCode(game_lib *GameCode)
+internal_func int LoadGameCode(game_lib *GameCode)
 {
     if (GameCode->LibHandle)
     {
@@ -69,6 +69,7 @@ __internal int LoadGameCode(game_lib *GameCode)
     }
 
     dlerror();  // reset dl errors
+    GameCode->GameInit = (GameInit_t)dlsym(GameCode->LibHandle, "GameInit");
     GameCode->GameUpdateAndRender = (GameUpdateAndRender_t)dlsym(GameCode->LibHandle, "GameUpdateAndRender");
 
     char const *DlSymError = dlerror();

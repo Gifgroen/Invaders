@@ -1,21 +1,8 @@
 #ifndef MATH_H
 #define MATH_H
 
-#include "defs.h"
+#include "types.h"
 
-struct v2 
-{
-    union 
-    {
-        struct
-        {
-            u32 X, Y;
-        };
-        struct 
-        {
-            u32 Width, Height;
-        };
-    };
-};
+v2 V2(u32 X, u32 Y);
 
 #endif // MATH_H

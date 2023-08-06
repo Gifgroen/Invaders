@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <x86intrin.h>
+
 #if defined(PLATFORM_WIN)
 #include "SDL.h"
 #elif defined(PLATFORM_MACOS)
@@ -9,15 +11,17 @@
 // TODO: Assert and crash?
 #endif
 
-#include <x86intrin.h>
-
 #include "defs.h"
+#include "types.h"
+#include "game.h"
+
+#include "framerate.cc"
+#include "gamelib.cc"
+#include "math.cc"
 #include "os_window.cc"
 #include "os_input.cc"
-#include "gamelib.cc"
-#include "framerate.cc"
 
-__internal int GetWindowRefreshRate(SDL_Window *Window)
+internal_func int GetWindowRefreshRate(SDL_Window *Window)
 {
     SDL_DisplayMode Mode;
     int DisplayIndex = SDL_GetWindowDisplayIndex(Window);
@@ -60,8 +64,14 @@ int main(int Argc, char *Args[])
     offscreen_buffer BackBuffer = {};
     UpdateOffscreenBuffer(&WindowState, &BackBuffer);
 
-    game_state GameState = {};
-    GameState.Running = true;
+    game_memory GameMemory = {};
+    GameMemory.TransientStorageSize = Megabytes(64);
+    GameMemory.PermanentStorageSize = Gigabytes(2);
+    GameMemory.TransientStorage = calloc(GameMemory.TransientStorageSize + GameMemory.PermanentStorageSize, sizeof(u8));
+    GameMemory.PermanentStorage = ((u8*)GameMemory.TransientStorage) + GameMemory.TransientStorageSize;
+
+    game_state *GameState = (game_state *)GameMemory.TransientStorage;
+    GameState->Running = true;
 
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
@@ -85,7 +95,11 @@ int main(int Argc, char *Args[])
     u64 StartCycleCount = _rdtsc();
     u64 StartTime = SDL_GetPerformanceCounter();
 
-    while (GameState.Running)
+    GameLib.GameInit(&GameMemory);
+
+    std::cout << "Ok, lets run!" << std::endl;
+
+    while (GameState->Running)
     {
         game_controller *OldKeyboardController = GetKeyboardForIndex(OldInput, 0);
         game_controller *NewKeyboardController = GetKeyboardForIndex(NewInput, 0);
@@ -110,13 +124,13 @@ int main(int Argc, char *Args[])
 
                 case SDL_QUIT:
                 {
-                    GameState.Running = false;
+                    GameState->Running = false;
                 } break;
 
                 case SDL_KEYUP:
                 case SDL_KEYDOWN:
                 {
-                    ProcessKeyboardEvents(&e, &GameState, NewKeyboardController);
+                    ProcessKeyboardEvents(&e, GameState, NewKeyboardController);
                 } break;
             }
         }
@@ -129,7 +143,7 @@ int main(int Argc, char *Args[])
         }
         
         // TODO: simulate game
-        GameLib.GameUpdateAndRender(&GameState, &BackBuffer, NewInput);
+        GameLib.GameUpdateAndRender(&GameMemory, &BackBuffer, NewInput);
 
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 

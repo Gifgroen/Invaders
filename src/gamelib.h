@@ -5,7 +5,8 @@
 #include "game.h"
 #include "os_input.h"
 
-typedef void (*GameUpdateAndRender_t)(game_state *, offscreen_buffer *, game_input*);
+typedef void (*GameInit_t)(game_memory *);
+typedef void (*GameUpdateAndRender_t)(game_memory *, offscreen_buffer *, game_input*);
 
 struct game_lib
 {
@@ -13,9 +14,10 @@ struct game_lib
     void* LibHandle;
     s64 LastWriteTime;
 
+    GameInit_t GameInit;
     GameUpdateAndRender_t GameUpdateAndRender;
 };
 
-__internal int LoadGameCode(game_lib *GameCode);
+internal_func int LoadGameCode(game_lib *GameCode);
 
 #endif // GAMELIB_H

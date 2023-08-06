@@ -15,7 +15,7 @@ game_controller *GetControllerForIndex(game_input *Input, int Index)
     return Result;
 }
 
-__internal void OpenInputControllers() 
+internal_func void OpenInputControllers() 
 {
     for (int ControllerIndex = 0; ControllerIndex < SDL_NumJoysticks(); ++ControllerIndex)
     {
@@ -85,13 +85,13 @@ void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState, game_controller 
     }
 }
 
-__internal void ProcessGameControllerButton(game_button_state *OldState, game_button_state *NewState, bool Value)
+internal_func void ProcessGameControllerButton(game_button_state *OldState, game_button_state *NewState, bool Value)
 {
     NewState->IsDown = Value;
     NewState->HalfTransitionCount += ((NewState->IsDown == OldState->IsDown) ? 0 : 1);
 }
 
-__internal real32 ProcessGameControllerAxisValue(s16 Value, s16 DeadZoneThreshold)
+internal_func real32 ProcessGameControllerAxisValue(s16 Value, s16 DeadZoneThreshold)
 {
     real32 Result = 0;
 

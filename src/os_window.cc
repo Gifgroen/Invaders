@@ -1,8 +1,18 @@
 #include "os_window.h"
+
 #include <iostream>
 
-#include "game.h"
+#if defined(PLATFORM_WIN)
+#include "SDL.h"
+#elif defined(PLATFORM_MACOS)
+#include <SDL2/SDL.h>
+#else
+// TODO: Assert and crash?
+#endif
+
 #include "defs.h"
+#include "game.h"
+#include "types.h"
 
 bool InitWindow(window_state *WindowState)
 {
