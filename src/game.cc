@@ -49,12 +49,12 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
         else if (Keyboard->MoveRight.IsDown || Controller->MoveRight.IsDown)
         {
             Color = 0xFFFF0000;
-        } 
-        else 
+        }
+        else
         {
             Color = 0xFFFFFFFF;
         }
 
-        DrawRectangle(Buffer, Color);        
+        DrawRectangle(Buffer, Color);
     }
 }

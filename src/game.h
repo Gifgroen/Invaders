@@ -25,17 +25,20 @@ struct game_memory
     void *PermanentStorage;
 };
 
+typedef void (*GameInit_t)(game_memory *);
+typedef void (*GameUpdateAndRender_t)(game_memory *, offscreen_buffer *, game_input*);
+
 extern "C" 
 {
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 
     #endif
-    void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input);
-
+    void GameInit(game_memory *GameMemory);
+    
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 
     #endif
-    void GameInit(game_memory *GameMemory);
+    void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input);
 }
 
-#endif
+#endif // GAME_H

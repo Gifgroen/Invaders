@@ -31,4 +31,4 @@ struct v2
     };
 };
 
-#endif
+#endif // TYPES_H

@@ -22,4 +22,4 @@ struct window_state
     SDL_Texture *WindowTexture;
 };
 
-#endif
+#endif // OS_WINDOW_H
