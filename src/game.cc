@@ -1,9 +1,6 @@
 #include "game.h"
 
-#include <stdlib.h>
 #include <iostream>
-
-#include "os_input.h"
 
 void GameInit(game_memory *GameMemory)
 {

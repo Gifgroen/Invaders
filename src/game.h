@@ -3,7 +3,6 @@
 
 #include "defs.h"
 #include "types.h"
-#include "math.h"
 #include "os_input.h"
 
 struct offscreen_buffer 

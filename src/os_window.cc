@@ -10,9 +10,7 @@
 // TODO: Assert and crash?
 #endif
 
-#include "defs.h"
 #include "game.h"
-#include "types.h"
 
 bool InitWindow(window_state *WindowState)
 {

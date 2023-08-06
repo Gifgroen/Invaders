@@ -3,7 +3,6 @@
 
 #include "defs.h"
 #include "game.h"
-#include "os_input.h"
 
 typedef void (*GameInit_t)(game_memory *);
 typedef void (*GameUpdateAndRender_t)(game_memory *, offscreen_buffer *, game_input*);
