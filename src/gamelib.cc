@@ -1,7 +1,6 @@
 #include "gamelib.h"
 
 #include <iostream>
-#include <stdio.h>
 
 #if defined(PLATFORM_WIN)
 #include <windows.h>

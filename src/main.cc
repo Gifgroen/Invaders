@@ -44,7 +44,7 @@ internal_func int GetWindowRefreshRate(SDL_Window *Window)
 int GameMain(int Argc, char *Args[])
 {
 #if DEBUG 
-    printf("[Debug] %d arguments passed. ", Argc - 1);
+    std::cout << "[Debug] " << (Argc - 1) << " arguments passed." << std::endl;
 #endif
 
     window_state WindowState = {};
