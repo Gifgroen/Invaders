@@ -22,11 +22,11 @@ struct v2
     {
         struct
         {
-            u32 X, Y;
+            s32 X, Y;
         };
         struct 
         {
-            u32 Width, Height;
+            s32 Width, Height;
         };
     };
 };

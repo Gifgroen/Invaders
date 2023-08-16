@@ -14,6 +14,9 @@ struct offscreen_buffer
 struct game_state 
 {
     bool Running;
+
+    v2 PlayerOrigin;
+    v2 PlayerSize;
 };
 
 struct game_memory

@@ -79,6 +79,14 @@ int GameMain(int Argc, char *Args[])
 
     game_state *GameState = (game_state *)GameMemory.TransientStorage;
     GameState->Running = true;
+    // Player
+    GameState->PlayerSize = V2(64, 64);
+    v2 BufferSize = BackBuffer.Size;
+    GameState->PlayerOrigin = V2((
+        BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
+        BufferSize.Height - GameState->PlayerSize.Height - 16 // Y
+    ); 
+
 
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
