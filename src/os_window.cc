@@ -37,7 +37,7 @@ bool InitWindow(window_state *WindowState)
         return false;
     }
 
-    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Size.Width, Size.Height);
+    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Size.Width, Size.Height);
     if(WindowState->WindowTexture == NULL)
     {
         std::cout << "WindowTexture could not be created! SDL Error: " << SDL_GetError() << std::endl;
@@ -69,7 +69,7 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     Buffer->Size = Size;
 
     std::cout << "Texture is " << Width << "x" << Height << std::endl;
-    Buffer->Pixels = malloc(Width * Height * sizeof(u32));
+    Buffer->Pixels = calloc(Width * Height, sizeof(u32));
 }
 
 void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
@@ -97,7 +97,7 @@ void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen
 
 void UpdateWindow(window_state *WindowState, void const *Pixels)
 {
-    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, 4);
+    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, WindowState->Size.Width * sizeof(u32));
     SDL_RenderCopy(WindowState->Renderer, WindowState->WindowTexture, 0, 0);
     SDL_RenderPresent(WindowState->Renderer);
 }
