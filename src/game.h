@@ -37,7 +37,7 @@ extern "C"
     __declspec(dllexport) 
     #endif
     void GameInit(game_memory *GameMemory);
-    
+
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 
     #endif

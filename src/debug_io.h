@@ -10,4 +10,4 @@ struct debug_read_file_result
     void *Content;
 };
 
-#endif
+#endif // DEBUG_IO_H
