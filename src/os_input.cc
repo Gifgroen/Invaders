@@ -78,9 +78,10 @@ void ProcessKeyboardEvents(SDL_Event *e, game_state *GameState, game_controller 
             ProcessKeyEvent(&(KeyboardInput->MoveRight), IsDown);
         } break;
 
-        default: {
+        default: 
+        {
             // TODO process...
-            printf("Pressed key = %s, repeat = %d\n", SDL_GetKeyName(Key.keysym.sym), Key.repeat);
+            std::cout << "Pressed key = " << SDL_GetKeyName(Key.keysym.sym) << ", repeat = " << Key.repeat << std::endl;
         } break;
     }
 }

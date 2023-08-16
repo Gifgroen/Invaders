@@ -10,16 +10,14 @@
 // TODO: Assert and crash?
 #endif
 
-#include "defs.h"
 #include "game.h"
-#include "types.h"
 
 bool InitWindow(window_state *WindowState)
 {
     u32 InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER;
     if(SDL_Init(InitFlags) < 0)
     {
-        printf("Init failed! %s\n", SDL_GetError());
+        std::cout << "Init failed! " <<  SDL_GetError() << std::endl;
         return false;
     }   
 
@@ -28,21 +26,21 @@ bool InitWindow(window_state *WindowState)
     WindowState->Window = SDL_CreateWindow(WindowState->Title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Size.Width, Size.Height, WindowFlags);
     if(WindowState->Window == NULL)
     {
-        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
     WindowState->Renderer = SDL_CreateRenderer(WindowState->Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if(WindowState->Renderer == NULL)
     {
-        printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+        std::cout << "Renderer could not be created! SDL Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
-    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, Size.Width, Size.Height);
+    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Size.Width, Size.Height);
     if(WindowState->WindowTexture == NULL)
     {
-        printf("WindowTexture could not be created! SDL Error: %s\n", SDL_GetError());
+        std::cout << "WindowTexture could not be created! SDL Error: " << SDL_GetError() << std::endl;
         return false;
     }
 
@@ -62,7 +60,7 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
         free(Buffer->Pixels);
     }
 
-    printf("Update BackBuffer to new Size = (%d, %d)\n", WindowState->Size.Width, WindowState->Size.Height);
+    std::cout << "Update BackBuffer to new Size = (" << WindowState->Size.Width << ", " << WindowState->Size.Height << std::endl;
     v2 Size = WindowState->Size;
     u32 Width = Size.Width;
     u32 Height = Size.Height;
@@ -71,7 +69,7 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     Buffer->Size = Size;
 
     std::cout << "Texture is " << Width << "x" << Height << std::endl;
-    Buffer->Pixels = malloc(Width * Height * sizeof(u32));
+    Buffer->Pixels = calloc(Width * Height, sizeof(u32));
 }
 
 void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
@@ -99,7 +97,7 @@ void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen
 
 void UpdateWindow(window_state *WindowState, void const *Pixels)
 {
-    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, 4);
+    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, WindowState->Size.Width * sizeof(u32));
     SDL_RenderCopy(WindowState->Renderer, WindowState->WindowTexture, 0, 0);
     SDL_RenderPresent(WindowState->Renderer);
 }

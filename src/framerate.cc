@@ -25,7 +25,7 @@ internal_func void TryWaitForNextFrame(u64 LastCounter, real64 TargetSecondsPerF
 
         if (GetSecondsElapsed(LastCounter, SDL_GetPerformanceCounter()) >= TargetSecondsPerFrame) 
         {
-            printf("Frame time %02f was more then our target\n", GetSecondsElapsed(LastCounter, SDL_GetPerformanceCounter()));
+            std::cout << "Frame time " << GetSecondsElapsed(LastCounter, SDL_GetPerformanceCounter()) << " was more then our target" << std::endl;
         }
         while (GetSecondsElapsed(LastCounter, SDL_GetPerformanceCounter()) < TargetSecondsPerFrame)
         {

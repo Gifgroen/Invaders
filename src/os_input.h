@@ -35,4 +35,4 @@ struct game_input
     game_controller Controllers[1];
 };
 
-#endif
+#endif // OS_INPUT_H

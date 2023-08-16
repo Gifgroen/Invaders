@@ -15,6 +15,6 @@ pushd $BASE_DIR/build/macos
 $CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -shared -o ./libgame.so -fPIC $BASE_DIR/src/game.cc 
 
 # Create platform layer that uses platform agnostic Game
-$CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -o invaders $SDL_FLAGS -fPIC $BASE_DIR/src/main.macos.cc
+$CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -o invaders $SDL_FLAGS -fPIC $BASE_DIR/src/main.cc
 
 popd

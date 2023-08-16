@@ -1,7 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <iostream>
 
+#if defined(PLATFORM_WIN)
+#include <intrin.h>
+#elif defined(PLATFORM_MACOS)
 #include <x86intrin.h>
+#endif
 
 #if defined(PLATFORM_WIN)
 #include "SDL.h"
@@ -18,8 +21,8 @@
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"
-#include "os_window.cc"
 #include "os_input.cc"
+#include "os_window.cc"
 
 internal_func int GetWindowRefreshRate(SDL_Window *Window)
 {
@@ -38,10 +41,10 @@ internal_func int GetWindowRefreshRate(SDL_Window *Window)
     return Mode.refresh_rate;
 }
 
-int main(int Argc, char *Args[])
+int GameMain(int Argc, char *Args[])
 {
 #if DEBUG 
-    printf("[Debug] %d arguments passed. ", Argc - 1);
+    std::cout << "[Debug] " << (Argc - 1) << " arguments passed." << std::endl;
 #endif
 
     window_state WindowState = {};
@@ -49,15 +52,19 @@ int main(int Argc, char *Args[])
     WindowState.Size = V2(1024, 768);
     if (InitWindow(&WindowState) == false)
     {
-        printf("[Error] Initialising the window failed!\n");
+        std::cout << "[Error] Initialising the window failed!" << std::endl;
         return -1;
     }
 
     game_lib GameLib = {};
+#if defined(PLATFORM_MACOS)
     GameLib.LibPath = "../build/macos/libgame.so";
+#elif defined(PLATFORM_WIN)
+    GameLib.LibPath = "../build/win/libgame.dll";
+#endif
     if (LoadGameCode(&GameLib) != 0)
     {
-        printf("[Error] Loading GameCode failed!\n");
+        std::cout << "[Error] Loading GameCode failed!" << std::endl;
         return -1;
     }
     
@@ -72,13 +79,20 @@ int main(int Argc, char *Args[])
 
     game_state *GameState = (game_state *)GameMemory.TransientStorage;
     GameState->Running = true;
+    // Player
+    GameState->PlayerSize = V2(64, 64);
+    v2 BufferSize = BackBuffer.Size;
+    GameState->PlayerOrigin = V2((
+        BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
+        BufferSize.Height - GameState->PlayerSize.Height - 16 // Y
+    );
 
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
     int DetectedFrameRate = GetWindowRefreshRate(WindowState.Window);
     if (DetectedFrameRate != GameUpdateHz)
     {
-        printf("Device capable refresh rate is %d Hz, but Game runs in %d Hz\n", DetectedFrameRate, GameUpdateHz);
+        std::cout << "Device capable refresh rate is " << DetectedFrameRate << " Hz, but Game runs in " << GameUpdateHz << " Hz\n";
     }
 
     // Setup Input
@@ -92,7 +106,7 @@ int main(int Argc, char *Args[])
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
 
     // Administration to enforce a framerate of GameUpdateHz
-    u64 StartCycleCount = _rdtsc();
+    u64 StartCycleCount = __rdtsc();
     u64 StartTime = SDL_GetPerformanceCounter();
 
     GameLib.GameInit(&GameMemory);
@@ -138,7 +152,7 @@ int main(int Argc, char *Args[])
 
         if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
         {
-            printf("[Info] GameCode has changed, reloading!\n");
+            std::cout << "[Info] GameCode has changed, reloading!\n" << std::endl;
             LoadGameCode(&GameLib);
         }
         
@@ -162,7 +176,7 @@ int main(int Argc, char *Args[])
         ///
 
         // Cycles
-        u64 EndCycleCount = _rdtsc();
+        u64 EndCycleCount = __rdtsc();
         u64 CycleCount = EndCycleCount - StartCycleCount;
         // Accumulate
         u64 ElapsedTime = EndTime - StartTime;
@@ -175,7 +189,7 @@ int main(int Argc, char *Args[])
 
         // Cycles devided by a million = Mega Cycles per frame (mc/f).
         real64 MCPF = ((real64)CycleCount / (1000.0f * 1000.0f));
-        printf("Time: %.02fms/f, FPS: %.02ff/s, Cycles: %.02fmc/f\n", MSPF, FPS, MCPF);
+        std::cout << "Time: " << MSPF << "ms/f, FPS: " << FPS << "f/s, Cycles: " << MCPF << "mc/f" << std::endl;
         StartCycleCount = EndCycleCount;
         StartTime = EndTime;
     }
@@ -184,3 +198,18 @@ int main(int Argc, char *Args[])
     DestroyBackBuffer(&BackBuffer);
     return 0;
 }
+
+
+#if defined(PLATFORM_MACOS)
+int main(int Argc, char *Argv[])
+{
+     return GameMain(Argc, Argv);
+}
+#elif defined(PLATFORM_WIN)
+int wmain(int Argc, char *Argv[])
+{
+     return GameMain(Argc, Argv); 
+}
+#else 
+// NO SUPPORT FOR UNKNOWN PLATFORM
+#endif

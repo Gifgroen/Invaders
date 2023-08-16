@@ -3,7 +3,6 @@
 
 #include "defs.h"
 #include "types.h"
-#include "math.h"
 #include "os_input.h"
 
 struct offscreen_buffer 
@@ -15,6 +14,9 @@ struct offscreen_buffer
 struct game_state 
 {
     bool Running;
+
+    v2 PlayerOrigin;
+    v2 PlayerSize;
 };
 
 struct game_memory
@@ -26,17 +28,20 @@ struct game_memory
     void *PermanentStorage;
 };
 
+typedef void (*GameInit_t)(game_memory *);
+typedef void (*GameUpdateAndRender_t)(game_memory *, offscreen_buffer *, game_input*);
+
 extern "C" 
 {
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 
     #endif
-    void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input);
+    void GameInit(game_memory *GameMemory);
 
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 
     #endif
-    void GameInit(game_memory *GameMemory);
+    void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input);
 }
 
-#endif
+#endif // GAME_H
