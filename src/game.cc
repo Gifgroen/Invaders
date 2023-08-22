@@ -4,17 +4,44 @@
 #include "debug_io.cc"
 
 #include <iostream>
+#include <unistd.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb/stb_image.h"
+
+struct loaded_texture 
+{
+    v2 Size;
+    void *Pixels;
+};
+
+internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
+{
+    // Assert(Origin.x < Origin.x + Texture->Size.Width);
+    // Assert(Origin.y < Origin.y + Texture->Size.Height);
+
+    int Width = Texture->Size.Width;
+    int Height = Texture->Size.Height;
+
+    v2i Dim = Buffer->Size;
+    
+    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.Y * Dim.Width) + (u32)Origin.X ;
+    u32 *TexturePixels = (u32*)Texture->Pixels;
+    for (int Y = 0; Y < Height; ++Y) 
+    {
+        for (int X = 0; X < Width; ++X)
+        {
+            *(Pixels + X) = *(TexturePixels + X);
+        }
+        Pixels += Dim.Width;
+        TexturePixels += Width;
+    }
+}
 
 void GameInit(game_memory *GameMemory)
 {
     game_state *GameState = (game_state*)GameMemory->TransientStorage;
     std::cout << "GameInit: running = " << GameState->Running << std::endl;
-
-    // Read defs.h and print the result
-    debug_read_file_result Result = DebugReadEntireFile("../src/defs.h");
-    char const *Content = (char *)Result.Content;
-    std::cout << "Result: " << Content << std::endl;
-    DebugFreeFileMemory(Result.Content);
 }
 
 internal_func void Clear(offscreen_buffer *Buffer, u32 Color) 
@@ -30,23 +57,23 @@ internal_func void Clear(offscreen_buffer *Buffer, u32 Color)
     }
 }
 
-internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
-{
-    // TODO: properly round Origin.X and Origin.Y.
-    u32 Row = (u32)Origin.Y * Buffer->Size.Width;
-    u32 Column = (u32)Origin.X;
+// internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
+// {
+//     // TODO: properly round Origin.X and Origin.Y.
+//     u32 Row = (u32)Origin.Y * Buffer->Size.Width;
+//     u32 Column = (u32)Origin.X;
 
-    u32 *Target = (u32 *)Buffer->Pixels + Row + Column;
+//     u32 *Target = (u32 *)Buffer->Pixels + Row + Column;
 
-    for (s32 Y = 0; Y < Size.Height; ++Y)
-    {
-        for (s32 X = 0; X < Size.Width; ++X)
-        {
-            *(Target + X) = Color;
-        }
-        Target += Buffer->Size.Width;
-    }
-}
+//     for (s32 Y = 0; Y < Size.Height; ++Y)
+//     {
+//         for (s32 X = 0; X < Size.Width; ++X)
+//         {
+//             *(Target + X) = Color;
+//         }
+//         Target += Buffer->Size.Width;
+//     }
+// }
 
 real64 Square(real64 Factor)
 {
@@ -103,6 +130,26 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     GameState->PlayerPosition = NewPlayerP;
     GameState->Velocity = newVelocity;
 
-    u32 RectColor = 0xFF00FF00;
-    DrawRectangle(Buffer, GameState->PlayerPosition, GameState->PlayerSize, RectColor);
+    // u32 RectColor = 0xFF00FF00;
+    // DrawRectangle(Buffer, GameState->PlayerOrigin, GameState->PlayerSize, RectColor);
+
+    // Read defs.h and print the result
+    debug_read_file_result Result = DebugReadEntireFile("../data/ship.png");
+
+    int Width, Height, Comp;
+    char unsigned const *Contents = (char unsigned const *)Result.Content;
+    char unsigned *Pixels = stbi_load_from_memory(Contents, Result.ContentSize, &Width, &Height, &Comp, STBI_rgb_alpha);
+
+    loaded_texture Texture = {};
+    v2 Size = {};
+    Size.Width = Width;
+    Size.Height = Height;
+    Texture.Size = Size;
+    Texture.Pixels = Pixels;
+
+    DrawTexture(Buffer, GameState->PlayerPosition, &Texture);
+
+    stbi_image_free(Pixels);
+
+    DebugFreeFileMemory(Result.Content);
 }

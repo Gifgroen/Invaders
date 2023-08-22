@@ -80,7 +80,7 @@ int GameMain(int Argc, char *Args[])
     game_state *GameState = (game_state *)GameMemory.TransientStorage;
     GameState->Running = true;
     // Player
-    GameState->PlayerSize = V2i(64, 64);
+    GameState->PlayerSize = V2i(268, 268);
     v2i BufferSize = BackBuffer.Size;
     GameState->PlayerPosition = V2((
         (real32)BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
