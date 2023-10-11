@@ -82,7 +82,7 @@ int GameMain(int Argc, char *Args[])
     // Player
     GameState->PlayerSize = V2(64, 64);
     v2 BufferSize = BackBuffer.Size;
-    GameState->PlayerOrigin = V2((
+    GameState->PlayerPosition = V2((
         BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
         BufferSize.Height - GameState->PlayerSize.Height - 16 // Y
     );
@@ -94,6 +94,8 @@ int GameMain(int Argc, char *Args[])
     {
         std::cout << "Device capable refresh rate is " << DetectedFrameRate << " Hz, but Game runs in " << GameUpdateHz << " Hz\n";
     }
+
+    GameState->DeltaTime = 1.f / (real32)GameUpdateHz;
 
     // Setup Input
     game_input Input[2] = {};
