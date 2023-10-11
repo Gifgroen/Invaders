@@ -15,7 +15,7 @@
 struct window_state
 {
     char const * Title;
-    v2 Size;
+    v2i Size;
     SDL_Window *Window;
     SDL_Renderer *Renderer;
 

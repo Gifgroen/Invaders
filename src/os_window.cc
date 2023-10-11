@@ -21,7 +21,7 @@ bool InitWindow(window_state *WindowState)
         return false;
     }   
 
-    v2 Size = WindowState->Size;
+    v2i Size = WindowState->Size;
     u32 WindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
     WindowState->Window = SDL_CreateWindow(WindowState->Title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Size.Width, Size.Height, WindowFlags);
     if(WindowState->Window == NULL)
@@ -61,7 +61,7 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     }
 
     std::cout << "Update BackBuffer to new Size = (" << WindowState->Size.Width << ", " << WindowState->Size.Height << std::endl;
-    v2 Size = WindowState->Size;
+    v2i Size = WindowState->Size;
     u32 Width = Size.Width;
     u32 Height = Size.Height;
     WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Width, Height);
@@ -74,7 +74,7 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
 
 void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
 {
-    v2 *NewSize = &WindowState->Size;
+    v2i *NewSize = &WindowState->Size;
     switch (e->event)
     {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
