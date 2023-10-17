@@ -89,13 +89,14 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     int PixelsPerMeter = 64;
 
-    // TODO: do this adjustment later.
+    // TODO: do this `PixelPerMeter` adjustment later.
     real32 Speed = 5 * PixelsPerMeter; // m/s * pixelsPerMeter = pixels per meter / s
     v2 Acceleration = MovementDirection * Speed;
 
-    v2 newVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
+    // TODO: proper friction to "decelerate"
+    Acceleration += -0.9f * GameState->Velocity;
 
-    // TODO: friction to "brake/decelerate"
+    v2 newVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
 
     v2 NewPlayerP = 0.5f * Acceleration * Square(GameState->DeltaTime) + newVelocity * GameState->DeltaTime + GameState->PlayerPosition;
     
