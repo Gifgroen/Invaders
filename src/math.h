@@ -26,19 +26,19 @@ inline v2 operator*(v2 Lhs, real32 Rhs)
     return Result;
 }
 
-inline v2 operator+(v2 Lhs, v2 Rhs)
-{
-    v2 Result = {};
-    Result.X += Lhs.X + Rhs.X;
-    Result.Y += Lhs.Y + Rhs.Y;
-    return Result;
-}
-
 inline v2 operator*=(v2 Lhs, real32 Rhs)
 {
     v2 Result = Lhs;
     Result.X *= Rhs;
     Result.Y *= Rhs;
+    return Result;
+}
+
+inline v2 operator+(v2 Lhs, v2 Rhs)
+{
+    v2 Result = {};
+    Result.X = Lhs.X + Rhs.X;
+    Result.Y = Lhs.Y + Rhs.Y;
     return Result;
 }
 
