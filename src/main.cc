@@ -49,7 +49,7 @@ int GameMain(int Argc, char *Args[])
 
     window_state WindowState = {};
     WindowState.Title = "Invaders must die!";
-    WindowState.Size = V2(1024, 768);
+    WindowState.Size = V2i(1024, 768);
     if (InitWindow(&WindowState) == false)
     {
         std::cout << "[Error] Initialising the window failed!" << std::endl;
@@ -80,11 +80,11 @@ int GameMain(int Argc, char *Args[])
     game_state *GameState = (game_state *)GameMemory.TransientStorage;
     GameState->Running = true;
     // Player
-    GameState->PlayerSize = V2(64, 64);
-    v2 BufferSize = BackBuffer.Size;
-    GameState->PlayerOrigin = V2((
-        BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
-        BufferSize.Height - GameState->PlayerSize.Height - 16 // Y
+    GameState->PlayerSize = V2i(64, 64);
+    v2i BufferSize = BackBuffer.Size;
+    GameState->PlayerPosition = V2((
+        (real32)BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
+        (real32)BufferSize.Height - GameState->PlayerSize.Height - 16 // Y
     );
 
     int const GameUpdateHz = 30;
@@ -94,6 +94,8 @@ int GameMain(int Argc, char *Args[])
     {
         std::cout << "Device capable refresh rate is " << DetectedFrameRate << " Hz, but Game runs in " << GameUpdateHz << " Hz\n";
     }
+
+    GameState->DeltaTime = 1.f / (real32)GameUpdateHz;
 
     // Setup Input
     game_input Input[2] = {};

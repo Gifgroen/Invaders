@@ -7,16 +7,19 @@
 
 struct offscreen_buffer 
 {
-    v2 Size;
+    v2i Size;
     void *Pixels;
 };
 
 struct game_state 
 {
     bool Running;
+    real64 DeltaTime;
 
-    v2 PlayerOrigin;
-    v2 PlayerSize;
+    v2 PlayerPosition;
+    v2i PlayerSize;
+
+    v2 Velocity;
 };
 
 struct game_memory

@@ -16,7 +16,7 @@ typedef uint64_t u64;
 typedef float real32;
 typedef double real64;
 
-struct v2 
+struct v2i
 {
     union 
     {
@@ -27,6 +27,21 @@ struct v2
         struct 
         {
             s32 Width, Height;
+        };
+    };
+};
+
+struct v2
+{
+    union 
+    {
+        struct
+        {
+            real32 X, Y;
+        };
+        struct
+        {
+            real32 Width, Height;
         };
     };
 };
