@@ -40,7 +40,7 @@ inline v2 operator+(v2 Lhs, v2 Rhs)
     return Result;
 }
 
-inline v2 & operator+=(v2 &Lhs, v2 Rhs)
+inline v2& operator+=(v2 &Lhs, v2 Rhs)
 {
     Lhs = Lhs + Rhs;
     return Lhs;
