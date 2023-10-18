@@ -15,29 +15,6 @@ struct loaded_texture
     void *Pixels;
 };
 
-internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
-{
-    // Assert(Origin.x < Origin.x + Texture->Size.Width);
-    // Assert(Origin.y < Origin.y + Texture->Size.Height);
-
-    int Width = Texture->Size.Width;
-    int Height = Texture->Size.Height;
-
-    v2i Dim = Buffer->Size;
-    
-    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.Y * Dim.Width) + (u32)Origin.X ;
-    u32 *TexturePixels = (u32*)Texture->Pixels;
-    for (int Y = 0; Y < Height; ++Y) 
-    {
-        for (int X = 0; X < Width; ++X)
-        {
-            *(Pixels + X) = *(TexturePixels + X);
-        }
-        Pixels += Dim.Width;
-        TexturePixels += Width;
-    }
-}
-
 void GameInit(game_memory *GameMemory)
 {
     game_state *GameState = (game_state*)GameMemory->TransientStorage;
@@ -57,23 +34,50 @@ internal_func void Clear(offscreen_buffer *Buffer, u32 Color)
     }
 }
 
-// internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
-// {
-//     // TODO: properly round Origin.X and Origin.Y.
-//     u32 Row = (u32)Origin.Y * Buffer->Size.Width;
-//     u32 Column = (u32)Origin.X;
+internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
+{
+    // TODO: properly round Origin.X and Origin.Y.
+    u32 Row = (u32)Origin.Y * Buffer->Size.Width;
+    u32 Column = (u32)Origin.X;
 
-//     u32 *Target = (u32 *)Buffer->Pixels + Row + Column;
+    u32 *Target = (u32 *)Buffer->Pixels + Row + Column;
 
-//     for (s32 Y = 0; Y < Size.Height; ++Y)
-//     {
-//         for (s32 X = 0; X < Size.Width; ++X)
-//         {
-//             *(Target + X) = Color;
-//         }
-//         Target += Buffer->Size.Width;
-//     }
-// }
+    for (s32 Y = 0; Y < Size.Height; ++Y)
+    {
+        for (s32 X = 0; X < Size.Width; ++X)
+        {
+            *(Target + X) = Color;
+        }
+        Target += Buffer->Size.Width;
+    }
+}
+
+internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
+{
+    // Assert(Origin.x < Origin.x + Texture->Size.Width);
+    // Assert(Origin.y < Origin.y + Texture->Size.Height);
+
+    u32 Width = Texture->Size.Width;
+    u32 Height = Texture->Size.Height;
+
+    v2i Dim = Buffer->Size;
+
+    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.Y * Dim.Width) + (u32)Origin.X ;
+    u32 *TexturePixels = (u32*)Texture->Pixels;
+
+    for (int Y = 0; Y < Height; ++Y) 
+    {
+        for (int X = 0; X < Width; ++X)
+        {
+            if ((*(TexturePixels + X) >> 24) > 128) 
+            {
+                *(Pixels + X) = *(TexturePixels + X);
+            }
+        }
+        Pixels += Dim.Width;
+        TexturePixels += Width;
+    }
+}
 
 real64 Square(real64 Factor)
 {
@@ -117,7 +121,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     int PixelsPerMeter = 64;
 
     // TODO: do this `PixelPerMeter` adjustment later.
-    real32 Speed = 5 * PixelsPerMeter; // m/s * pixelsPerMeter = pixels per meter / s
+    real32 Speed = 10 * PixelsPerMeter; // m/s * pixelsPerMeter = pixels per meter / s
     v2 Acceleration = MovementDirection * Speed;
 
     // TODO: proper friction to "decelerate"
@@ -130,11 +134,19 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     GameState->PlayerPosition = NewPlayerP;
     GameState->Velocity = newVelocity;
 
-    // u32 RectColor = 0xFF00FF00;
-    // DrawRectangle(Buffer, GameState->PlayerOrigin, GameState->PlayerSize, RectColor);
+    u32 BlueColor = 0xFFFF0000;
+    v2 BluePos = V2(100, 100);
+    v2i BlueSize = V2i(128, 128);
+    DrawRectangle(Buffer, BluePos, BlueSize, BlueColor);
+
+    u32 GreenColor = 0xFF00FF00;
+    v2i GreenSize = V2i(128, 128);
+    v2 GreenPos = V2(Buffer->Size.Width - GreenSize.Width - 100, 100);
+    DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
 
     // Read defs.h and print the result
-    debug_read_file_result Result = DebugReadEntireFile("../data/ship.png");
+    // debug_read_file_result Result = DebugReadEntireFile("../data/ship.png");
+    debug_read_file_result Result = DebugReadEntireFile("../data/ship2.png");
 
     int Width, Height, Comp;
     char unsigned const *Contents = (char unsigned const *)Result.Content;
