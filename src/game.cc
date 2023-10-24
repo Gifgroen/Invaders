@@ -79,10 +79,28 @@ internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_textu
     }
 }
 
-real64 Square(real64 Factor)
+struct coordinate_system 
 {
-    real64 Result = Factor * Factor;
-    return Result;
+    v2 Origin;
+    v2 XAxis;
+    v2 YAxis;
+};
+
+internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
+{
+    v2i AxisSize = V2i(8, 8);
+    // Origin
+    DrawRectangle(Buffer, System.Origin, AxisSize, Color);
+
+    // X
+    DrawRectangle(Buffer, System.Origin + 200 * System.XAxis, AxisSize, 0xFF00FF00);
+    // Y
+    DrawRectangle(Buffer, System.Origin + 200 * System.YAxis, AxisSize, 0xFF00FFFF);
+}
+
+internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
+{
+    DrawRectangle(Buffer, System.Origin + Point.X * System.XAxis + Point.Y * System.YAxis, V2i(4, 4), Color);
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
@@ -134,11 +152,28 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     GameState->PlayerPosition = NewPlayerP;
     GameState->Velocity = newVelocity;
 
-    u32 BlueColor = 0xFFFF0000;
-    v2 BluePos = V2(100, 100);
-    v2i BlueSize = V2i(128, 128);
-    DrawRectangle(Buffer, BluePos, BlueSize, BlueColor);
+    v2 ScreenCenter = V2((real32)Buffer->Size.Width * 0.5f, (real32)Buffer->Size.Height * 0.5f);
 
+    /**
+     * Playing with vectors
+     */
+    coordinate_system System = {};
+    System.Origin = ScreenCenter;
+
+    GameState->ElapsedTime += GameState->DeltaTime;
+
+    real32 Angle = GameState->ElapsedTime;
+    System.XAxis = V2(cosf(Angle), sinf(Angle));
+    System.YAxis = V2(-System.XAxis.Y, System.XAxis.X);
+
+    DrawCoordinateSystem(Buffer, System, 0xFFFF0000);
+
+    v2 Point = V2(200.f, 200.f);
+    DrawPointInCoordinateSystem(Buffer, System, Point, 0xFFFFFFFF);
+
+    /**
+     * Draw a Rectangle aligned with the X and Y Axis
+     */
     u32 GreenColor = 0xFF00FF00;
     v2i GreenSize = V2i(128, 128);
     v2 GreenPos = V2(Buffer->Size.Width - GreenSize.Width - 100, 100);
@@ -151,7 +186,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     int Width, Height, Comp;
     char unsigned const *Contents = (char unsigned const *)Result.Content;
     char unsigned *Pixels = stbi_load_from_memory(Contents, Result.ContentSize, &Width, &Height, &Comp, STBI_rgb_alpha);
-
+    
     loaded_texture Texture = {};
     v2 Size = {};
     Size.Width = Width;

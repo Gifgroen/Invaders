@@ -8,6 +8,15 @@ v2i V2i(u32 X, u32 Y);
 v2 V2(real32 X, real32 Y);
 
 /**
+ * General
+ */
+real64 Square(real64 Factor)
+{
+    real64 Result = Factor * Factor;
+    return Result;
+}
+
+/**
  *  V2 operators
  */
 inline v2 operator*(real32 Lhs, v2 Rhs)

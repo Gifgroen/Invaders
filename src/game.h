@@ -20,6 +20,8 @@ struct game_state
     v2i PlayerSize;
 
     v2 Velocity;
+
+    real64 ElapsedTime;
 };
 
 struct game_memory
