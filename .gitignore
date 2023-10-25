@@ -46,3 +46,21 @@ objs
 # End of https://www.toptal.com/developers/gitignore/api/c++
 
 .DS_Store
+
+# Start of https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
+
+### Visual Studio Code. ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# End of https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
