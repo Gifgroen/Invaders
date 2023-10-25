@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(MacOS - lldb) Invaders",
+      "type": "lldb",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/../build",
+      "program": "${workspaceFolder}/../build/macos/invaders", // Debugging binaries is not spported :/
+      "args": [],
+      "preLaunchTask": "Compile invaders (MacOS)"
+    },
+    {
+      "name": "(MacOS - gdb) Invaders",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/../build/macos/invaders",
+      "args": [],
+      "stopAtEntry": true,
+      "cwd": "${workspaceFolder}/../build",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "/usr/local/bin/gdb", // Complains I need to sign gdb on MmacOS
+      "preLaunchTask": "Compile invaders (MacOS)"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/me/Projects/Games/Invaders/src",
+      "program": "/Users/me/Projects/Games/Invaders/src/build/Debug/outDebug"
+    }
+  ]
+}

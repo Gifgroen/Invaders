@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile invaders (MacOS)",
+            "type": "shell",
+            "command": "sh",
+            "args": ["${workspaceFolder}/build.macos.sh"],
+            "group": "build"
+        }
+    ]
+}
