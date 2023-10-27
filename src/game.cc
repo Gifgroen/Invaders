@@ -28,10 +28,10 @@ internal_func void Clear(offscreen_buffer *Buffer, u32 Color)
     v2i Size = Buffer->Size;
     for (u32 Y = 0; Y < Size.Height; ++Y)
     {
-        u32 *Row = (u32*)Buffer->Pixels + (Y * Size.Width);
+        u32 *Pixel = (u32*)Buffer->Pixels + (Y * Size.Width);
         for (u32 X = 0; X < Size.Width; ++X)
         {
-            *(Row + X) = Color;
+            *Pixel++ = Color;
         }
     }
 }
@@ -42,15 +42,15 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
     u32 Row = (u32)Origin.Y * Buffer->Size.Width;
     u32 Column = (u32)Origin.X;
 
-    u32 *Target = (u32 *)Buffer->Pixels + Row + Column;
+    u32 *Pixel = (u32 *)Buffer->Pixels + Row + Column;
 
     for (s32 Y = 0; Y < Size.Height; ++Y)
     {
         for (s32 X = 0; X < Size.Width; ++X)
         {
-            *(Target + X) = Color;
+            *Pixel++ = Color;
         }
-        Target += Buffer->Size.Width;
+        Pixel += Buffer->Size.Width - Size.Width;
     }
 }
 
@@ -59,25 +59,26 @@ internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_textu
     // Assert(Origin.x < Origin.x + Texture->Size.Width);
     // Assert(Origin.y < Origin.y + Texture->Size.Height);
 
-    u32 Width = Texture->Size.Width;
-    u32 Height = Texture->Size.Height;
+    u32 TextureWidth = Texture->Size.Width;
+    u32 TextureHeight = Texture->Size.Height;
 
-    v2i Dim = Buffer->Size;
+    v2i BufferSize = Buffer->Size;
 
-    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.Y * Dim.Width) + (u32)Origin.X ;
+    u32 *Pixel = (u32 *)Buffer->Pixels + ((u32)Origin.Y * BufferSize.Width) + (u32)Origin.X;
     u32 *TexturePixels = (u32*)Texture->Pixels;
 
-    for (int Y = 0; Y < Height; ++Y) 
+    for (int Y = 0; Y < TextureHeight; ++Y) 
     {
-        for (int X = 0; X < Width; ++X)
+        for (int X = 0; X < TextureWidth; ++X)
         {
-            if ((*(TexturePixels + X) >> 24) > 128) 
+            if ((*TexturePixels >> 24) > 128) 
             {
-                *(Pixels + X) = *(TexturePixels + X);
+                *Pixel = *TexturePixels;
             }
+            Pixel++;
+            TexturePixels++;
         }
-        Pixels += Dim.Width;
-        TexturePixels += Width;
+        Pixel += BufferSize.Width - TextureWidth;
     }
 }
 
