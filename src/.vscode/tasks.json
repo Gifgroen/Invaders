@@ -7,6 +7,13 @@
             "command": "sh",
             "args": ["${workspaceFolder}/build.macos.sh"],
             "group": "build"
+        },
+        {
+            "label": "Compile invaders (Win)",
+            "type": "shell",
+            "command": "",
+            "args": ["${workspaceFolder}/build.win.bat"],
+            "group": "build"
         }
     ]
 }
