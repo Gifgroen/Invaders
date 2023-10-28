@@ -54,6 +54,31 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
     }
 }
 
+internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
+{
+    real32 SA = (real32)((Texel >> 24) & 0xFF);
+    real32 RSA = SA / 255.0f;
+    real32 SR = (real32)((Texel >> 16) & 0xFF);
+    real32 SG = (real32)((Texel >> 8) & 0xFF);
+    real32 SB = (real32)((Texel >> 0) & 0xFF);
+
+    real32 DA = (real32)((Pixel >> 24) & 0xFF);
+    real32 DR = (real32)((Pixel >> 16) & 0xFF);
+    real32 DG = (real32)((Pixel >> 8) & 0xFF);
+    real32 DB = (real32)((Pixel >> 0) & 0xFF);
+
+    real32 InvRsa = (1.0f - RSA);
+    real32 A = SA * RSA + DA * InvRsa;
+    real32 R = SR * RSA + DR * InvRsa;
+    real32 G = SG * RSA + DG * InvRsa;
+    real32 B = SB * RSA + DB * InvRsa;
+
+    return ((u32)(A + 0.5f) << 24)
+        | ((u32)(R + 0.5f) << 16)
+        | ((u32)(G + 0.5f) << 8)
+        | ((u32)(B + 0.5f) << 0);
+}
+
 internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
 {
     // Assert(Origin.x < Origin.x + Texture->Size.Width);
@@ -64,21 +89,19 @@ internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_textu
 
     v2i BufferSize = Buffer->Size;
 
-    u32 *Pixel = (u32 *)Buffer->Pixels + ((u32)Origin.Y * BufferSize.Width) + (u32)Origin.X;
-    u32 *TexturePixels = (u32*)Texture->Pixels;
+    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.Y * BufferSize.Width) + (u32)Origin.X;
+    u32 *TexturePixel = (u32*)Texture->Pixels;
 
     for (int Y = 0; Y < TextureHeight; ++Y) 
     {
         for (int X = 0; X < TextureWidth; ++X)
         {
-            if ((*TexturePixels >> 24) > 128) 
-            {
-                *Pixel = *TexturePixels;
-            }
-            Pixel++;
-            TexturePixels++;
+            *Pixels = AlphaBlend(*TexturePixel, *Pixels);
+
+            Pixels++;
+            TexturePixel++;
         }
-        Pixel += BufferSize.Width - TextureWidth;
+        Pixels += BufferSize.Width - TextureWidth;
     }
 }
 
@@ -184,7 +207,8 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     // Read defs.h and print the result
     // debug_read_file_result Result = DebugReadEntireFile("../data/ship.png");
-    debug_read_file_result Result = DebugReadEntireFile("../data/ship2.png");
+    // debug_read_file_result Result = DebugReadEntireFile("../data/ship2.png");
+    debug_read_file_result Result = DebugReadEntireFile("../data/ship3.png");
 
     int Width, Height, Comp;
     char unsigned const *Contents = (char unsigned const *)Result.Content;
