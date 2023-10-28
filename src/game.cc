@@ -4,9 +4,6 @@
 #include "debug_io.cc"
 
 #include <iostream>
-#if defined(PLATFORM_MACOS)
-#include <unistd.h>
-#endif
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
