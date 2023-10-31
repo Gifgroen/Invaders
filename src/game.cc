@@ -119,6 +119,8 @@ struct coordinate_system
     v2 Origin;
     v2 XAxis;
     v2 YAxis;
+
+    loaded_texture *Texture;
 };
 
 internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color, v2 Scale)
@@ -155,21 +157,43 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
         }
     }
 
+    real32 InvXAxisLengthSq = 1.0f / LengthSq(Scale.x * System.XAxis);
+    real32 InvYAxisLengthSq = 1.0f / LengthSq(Scale.y * System.YAxis);
+
     for (int Y = yMin; Y < yMax; ++Y)
     {
         for(int X = xMin; X < xMax; ++X)
         {
-            v2 Point = V2(X, Y);
-            int Edge0 = Dot(Point - System.Origin, -Perp(System.XAxis));
-            int Edge1 = Dot(Point - (System.Origin + Scale.x * System.XAxis), -Perp(System.YAxis));
-            int Edge2 = Dot(Point - (System.Origin + Scale.x * System.XAxis + Scale.y * System.YAxis), Perp(System.XAxis));
-            int Edge3 = Dot(Point - (System.Origin + Scale.y * System.YAxis), Perp(System.YAxis));
-
             u32 *Pixel = (u32*)Buffer->Pixels + (u32)Y * Buffer->Size.width + (u32)X;
+#if 1
+            v2 Point = V2(X, Y);
+            v2 d = Point - System.Origin;
+            int Edge0 = Dot(Point - System.Origin, -Perp(System.XAxis));
+            int Edge1 = Dot(d - Scale.x * System.XAxis, -Perp(System.YAxis));
+            int Edge2 = Dot(d - Scale.x * System.XAxis - Scale.y * System.YAxis, Perp(System.XAxis));
+            int Edge3 = Dot(d - Scale.y * System.YAxis, Perp(System.YAxis));
+
             if (Edge0 < 0 && Edge1 < 0 && Edge2 < 0 && Edge3 < 0) 
             {
-                *Pixel = Color;
+                real32 U = InvXAxisLengthSq * Dot(d, Scale.x * System.XAxis);
+                real32 V = InvYAxisLengthSq * Dot(d, Scale.y * System.YAxis);
+
+                Assert( U >= 0.0f && U <= 1.0f );
+                Assert( V >= 0.0f && V <= 1.0f );
+
+                u32 X = (u32)(U * (real32)(System.Texture->Size.width - 1));
+                u32 Y = (u32)(V * (real32)(System.Texture->Size.height - 1));
+
+                Assert(X >= 0 && X < System.Texture->Size.width);
+                Assert(Y >= 0 && Y < System.Texture->Size.height);
+
+                u32 *TexturePixel = (u32*)System.Texture->Pixels + (u32)(Y * System.Texture->Size.width) + X;
+                *Pixel = AlphaBlend(*TexturePixel, *Pixel);
+                // *Pixel = *TexturePixel;
             }
+#else 
+            *Pixel = Color;
+#endif
         }
     }
 }
@@ -254,13 +278,24 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     System.XAxis = V2(cosf(Angle), sinf(Angle));
     System.YAxis = Perp(System.XAxis);
 
-    // System.XAxis = V2(cos(0.25f * Pi32), sin(0.25f * Pi32));
-    // System.XAxis = V2(cos(0), sin(0));
-    System.YAxis = Perp(System.XAxis);
-
     // TODO: encorporate Scale in the Axis values; instead of seperate Scale.
     v2 Scale = V2(200.0f, 200.0f);
+    debug_read_file_result s2Result = DebugReadEntireFile("../data/ship2.png");
+    char unsigned const *s2Contents = (char unsigned const *)s2Result.Content;
+    int s2Width, s2Height, s2Comp;
+    char unsigned *s2Pixels = stbi_load_from_memory(s2Contents, s2Result.ContentSize, &s2Width, &s2Height, &s2Comp, STBI_rgb_alpha);
+    
+    loaded_texture s2Texture = {};
+    v2 s2Size = {};
+    s2Size.width = s2Width;
+    s2Size.height = s2Height;
+    s2Texture.Size = s2Size;
+    s2Texture.Pixels = s2Pixels;
+    System.Texture = &s2Texture;
     FillCoordinateSystem(Buffer, System, 0xFFFFFF00, Scale);
+
+    stbi_image_free(s2Pixels);
+    DebugFreeFileMemory(s2Result.Content);
 
     DrawCoordinateSystem(Buffer, System, Scale);
 
