@@ -21,9 +21,11 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     // Player
     GameState->PlayerSize = V2i(500, 500);
     v2i BufferSize = Buffer->Size;
-    GameState->PlayerPosition = V2((
-        (real32)BufferSize.width - GameState->PlayerSize.width) / 2, // X
-        (real32)BufferSize.height - GameState->PlayerSize.height - 16 // Y
+    GameState->PlayerPosition = V2(
+        0,
+        0
+        // (real32)BufferSize.width - GameState->PlayerSize.width) / 8, // X
+        // (real32)BufferSize.height - GameState->PlayerSize.height - 16 // Y
     );
 
     GameState->Running = true;
@@ -119,21 +121,69 @@ struct coordinate_system
     v2 YAxis;
 };
 
-internal_func void FillCoordinateSystem(coordinate_system System, u32 Color)
+internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color, v2 Scale)
 {
-    
+    v2 Points[4] = {
+        System.Origin,
+        System.Origin + Scale.x * System.XAxis,
+        System.Origin + Scale.x * System.XAxis + Scale.y * System.YAxis,
+        System.Origin + Scale.y * System.YAxis,
+    };
+
+    real32 xMin = Buffer->Size.width;
+    real32 xMax = 0;
+    real32 yMin = Buffer->Size.height;
+    real32 yMax = 0;
+    for (int i = 0; i < ArrayCount(Points); ++i )
+    {
+        v2 Point = Points[i];
+        if (Point.x < xMin)
+        {
+            xMin = Point.x;
+        }
+        if (Point.x > xMax)
+        {
+            xMax = Point.x;
+        }
+        if (Point.y < yMin)
+        {
+            yMin = Point.y;
+        }
+        if (Point.y > yMax)
+        {
+            yMax = Point.y;
+        }
+    }
+
+    for (int Y = yMin; Y < yMax; ++Y)
+    {
+        for(int X = xMin; X < xMax; ++X)
+        {
+            v2 Point = V2(X, Y);
+            int Edge0 = Dot(Point - System.Origin, -System.YAxis);
+            int Edge1 = Dot(Point - (System.Origin + Scale.x * System.XAxis), System.XAxis);
+            int Edge2 = Dot(Point - (System.Origin + Scale.x * System.XAxis + Scale.y * System.YAxis), System.YAxis);
+            int Edge3 = Dot(Point - (System.Origin + Scale.y * System.YAxis), -System.XAxis);
+
+            u32 *Pixel = (u32*)Buffer->Pixels + (u32)Y * Buffer->Size.width + (u32)X;
+            if (Edge0 < 0 && Edge1 < 0 && Edge2 < 0 && Edge3 < 0) 
+            {
+                *Pixel = Color;
+            }
+        }
+    }
 }
 
-internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color, v2 Scale)
+internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Scale)
 {
     v2i AxisSize = V2i(8, 8);
     // Origin
-    DrawRectangle(Buffer, System.Origin, AxisSize, Color);
+    DrawRectangle(Buffer, System.Origin, AxisSize, 0x00000000);
 
     // X Axis
-    DrawRectangle(Buffer, System.Origin + Scale.x * System.XAxis, AxisSize, 0xFF00FF00);
+    DrawRectangle(Buffer, System.Origin + Scale.x * System.XAxis, AxisSize, 0xFF0000FF);
     // Y Axis
-    DrawRectangle(Buffer, System.Origin + Scale.y * System.YAxis, AxisSize, 0xFF00FFFF);
+    DrawRectangle(Buffer, System.Origin + Scale.y * System.YAxis, AxisSize, 0xFF0000FF);
 }
 
 internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
@@ -202,15 +252,20 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     real32 Angle = GameState->ElapsedTime;
     System.XAxis = V2(cosf(Angle), sinf(Angle));
-    System.YAxis = V2(-System.XAxis.y, System.XAxis.x);
+    System.YAxis = Perp(System.XAxis);
 
-    FillCoordinateSystem(System, 0xFFFF0000);
+    // System.XAxis = V2(cos(0.25f * Pi32), sin(0.25f * Pi32));
+    // System.XAxis = V2(cos(0), sin(0));
+    System.YAxis = Perp(System.XAxis);
 
+    // TODO: encorporate Scale in the Axis values; instead of seperate Scale.
     v2 Scale = V2(200.0f, 200.0f);
-    DrawCoordinateSystem(Buffer, System, 0xFFFF0000, Scale);
+    FillCoordinateSystem(Buffer, System, 0xFFFFFF00, Scale);
+
+    DrawCoordinateSystem(Buffer, System, Scale);
 
     v2 Point = Scale;
-    DrawPointInCoordinateSystem(Buffer, System, Point, 0xFFFFFFFF);
+    DrawPointInCoordinateSystem(Buffer, System, Point, 0xFF00FFFF);
 
     /**
      * Draw a Rectangle aligned with the X and Y Axis
