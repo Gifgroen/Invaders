@@ -160,10 +160,10 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
         for(int X = xMin; X < xMax; ++X)
         {
             v2 Point = V2(X, Y);
-            int Edge0 = Dot(Point - System.Origin, -System.YAxis);
-            int Edge1 = Dot(Point - (System.Origin + Scale.x * System.XAxis), System.XAxis);
-            int Edge2 = Dot(Point - (System.Origin + Scale.x * System.XAxis + Scale.y * System.YAxis), System.YAxis);
-            int Edge3 = Dot(Point - (System.Origin + Scale.y * System.YAxis), -System.XAxis);
+            int Edge0 = Dot(Point - System.Origin, -Perp(System.XAxis));
+            int Edge1 = Dot(Point - (System.Origin + Scale.x * System.XAxis), -Perp(System.YAxis));
+            int Edge2 = Dot(Point - (System.Origin + Scale.x * System.XAxis + Scale.y * System.YAxis), Perp(System.XAxis));
+            int Edge3 = Dot(Point - (System.Origin + Scale.y * System.YAxis), Perp(System.YAxis));
 
             u32 *Pixel = (u32*)Buffer->Pixels + (u32)Y * Buffer->Size.width + (u32)X;
             if (Edge0 < 0 && Edge1 < 0 && Edge2 < 0 && Edge3 < 0) 

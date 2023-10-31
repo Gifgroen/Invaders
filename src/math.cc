@@ -8,19 +8,19 @@ real32 Pi32 = 3.141592653589793f;
 /**
  * General
  */
-real64 Square(real64 Factor)
+inline real64 Square(real64 Factor)
 {
     real64 Result = Factor * Factor;
     return Result;
 }
 
-real32 Dot(v2 A, v2 B)
+inline real32 Dot(v2 A, v2 B)
 {
     real32 Result = A.x * B.x + A.y * B.y;
     return Result;
 }
 
-v2 Perp(v2 A)
+inline v2 Perp(v2 A)
 {
     v2 Result = V2(-A.y, A.x);
     return Result;
