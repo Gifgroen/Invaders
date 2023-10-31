@@ -14,9 +14,19 @@ struct loaded_texture
     void *Pixels;
 };
 
-void GameInit(game_memory *GameMemory)
+void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
     game_state *GameState = (game_state*)GameMemory->TransientStorage;
+
+    // Player
+    GameState->PlayerSize = V2i(500, 500);
+    v2i BufferSize = Buffer->Size;
+    GameState->PlayerPosition = V2((
+        (real32)BufferSize.width - GameState->PlayerSize.width) / 2, // X
+        (real32)BufferSize.height - GameState->PlayerSize.height - 16 // Y
+    );
+
+    GameState->Running = true;
     std::cout << "GameInit: running = " << GameState->Running << std::endl;
 }
 

@@ -78,14 +78,6 @@ int GameMain(int Argc, char *Args[])
     GameMemory.PermanentStorage = ((u8*)GameMemory.TransientStorage) + GameMemory.TransientStorageSize;
 
     game_state *GameState = (game_state *)GameMemory.TransientStorage;
-    GameState->Running = true;
-    // Player
-    GameState->PlayerSize = V2i(500, 500);
-    v2i BufferSize = BackBuffer.Size;
-    GameState->PlayerPosition = V2((
-        (real32)BufferSize.width - GameState->PlayerSize.width) / 2, // X
-        (real32)BufferSize.height - GameState->PlayerSize.height - 16 // Y
-    );
 
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
@@ -111,7 +103,7 @@ int GameMain(int Argc, char *Args[])
     u64 StartCycleCount = __rdtsc();
     u64 StartTime = SDL_GetPerformanceCounter();
 
-    GameLib.GameInit(&GameMemory);
+    GameLib.GameInit(&GameMemory, &BackBuffer);
 
     std::cout << "Ok, lets run!" << std::endl;
 
