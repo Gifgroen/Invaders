@@ -10,7 +10,8 @@
       "cppStandard": "${default}",
       "intelliSenseMode": "macos-clang-x64",
       "compilerArgs": [
-        ""
+        "-DPLATFORM_MACOS=1",
+        "-DDEBUG=1"
       ]
     }
   ],
