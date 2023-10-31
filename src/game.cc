@@ -23,10 +23,10 @@ void GameInit(game_memory *GameMemory)
 internal_func void Clear(offscreen_buffer *Buffer, u32 Color) 
 {
     v2i Size = Buffer->Size;
-    for (u32 Y = 0; Y < Size.Height; ++Y)
+    for (u32 Y = 0; Y < Size.height; ++Y)
     {
-        u32 *Pixel = (u32*)Buffer->Pixels + (Y * Size.Width);
-        for (u32 X = 0; X < Size.Width; ++X)
+        u32 *Pixel = (u32*)Buffer->Pixels + (Y * Size.width);
+        for (u32 X = 0; X < Size.width; ++X)
         {
             *Pixel++ = Color;
         }
@@ -36,18 +36,18 @@ internal_func void Clear(offscreen_buffer *Buffer, u32 Color)
 internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
 {
     // TODO: properly round Origin.X and Origin.Y.
-    u32 Row = (u32)Origin.Y * Buffer->Size.Width;
-    u32 Column = (u32)Origin.X;
+    u32 Row = (u32)Origin.y * Buffer->Size.width;
+    u32 Column = (u32)Origin.x;
 
     u32 *Pixel = (u32 *)Buffer->Pixels + Row + Column;
 
-    for (s32 Y = 0; Y < Size.Height; ++Y)
+    for (s32 Y = 0; Y < Size.height; ++Y)
     {
-        for (s32 X = 0; X < Size.Width; ++X)
+        for (s32 X = 0; X < Size.width; ++X)
         {
             *Pixel++ = Color;
         }
-        Pixel += Buffer->Size.Width - Size.Width;
+        Pixel += Buffer->Size.width - Size.width;
     }
 }
 
@@ -78,15 +78,15 @@ internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
 
 internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
 {
-    // Assert(Origin.x < Origin.x + Texture->Size.Width);
-    // Assert(Origin.y < Origin.y + Texture->Size.Height);
+    Assert(Origin.x >= 0 && Origin.x < Origin.x + Texture->Size.width);
+    Assert(Origin.y >= 0 && Origin.y < Origin.y + Texture->Size.height);
 
-    u32 TextureWidth = Texture->Size.Width;
-    u32 TextureHeight = Texture->Size.Height;
+    u32 TextureWidth = Texture->Size.width;
+    u32 TextureHeight = Texture->Size.height;
 
     v2i BufferSize = Buffer->Size;
 
-    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.Y * BufferSize.Width) + (u32)Origin.X;
+    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.y * BufferSize.width) + (u32)Origin.x;
     u32 *TexturePixel = (u32*)Texture->Pixels;
 
     for (int Y = 0; Y < TextureHeight; ++Y) 
@@ -98,7 +98,7 @@ internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_textu
             Pixels++;
             TexturePixel++;
         }
-        Pixels += BufferSize.Width - TextureWidth;
+        Pixels += BufferSize.width - TextureWidth;
     }
 }
 
@@ -109,21 +109,26 @@ struct coordinate_system
     v2 YAxis;
 };
 
+internal_func void FillCoordinateSystem(coordinate_system System, u32 Color)
+{
+
+}
+
 internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
 {
     v2i AxisSize = V2i(8, 8);
     // Origin
     DrawRectangle(Buffer, System.Origin, AxisSize, Color);
 
-    // X
+    // X Axis
     DrawRectangle(Buffer, System.Origin + 200 * System.XAxis, AxisSize, 0xFF00FF00);
-    // Y
+    // Y Axis
     DrawRectangle(Buffer, System.Origin + 200 * System.YAxis, AxisSize, 0xFF00FFFF);
 }
 
 internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
 {
-    DrawRectangle(Buffer, System.Origin + Point.X * System.XAxis + Point.Y * System.YAxis, V2i(4, 4), Color);
+    DrawRectangle(Buffer, System.Origin + Point.x * System.XAxis + Point.y * System.YAxis, V2i(4, 4), Color);
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
@@ -139,22 +144,22 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2 MovementDirection = {};
     if (Keyboard.MoveLeft.IsDown || Controller.MoveLeft.IsDown)
     {
-        MovementDirection.X = -1.f;
+        MovementDirection.x = -1.f;
     }
     if (Keyboard.MoveRight.IsDown || Controller.MoveRight.IsDown)
     {
-        MovementDirection.X = 1.f;
+        MovementDirection.x = 1.f;
     }
     if (Keyboard.MoveUp.IsDown || Controller.MoveUp.IsDown)
     {
-        MovementDirection.Y = -1.f;
+        MovementDirection.y = -1.f;
     }
     if (Keyboard.MoveDown.IsDown || Controller.MoveDown.IsDown)
     {
-        MovementDirection.Y = 1.f;
+        MovementDirection.y = 1.f;
     }
 
-    if (MovementDirection.X != 0.f && MovementDirection.Y != 0.f)
+    if (MovementDirection.x != 0.f && MovementDirection.y != 0.f)
     {
         MovementDirection *= 0.707106f;
     }
@@ -175,7 +180,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     GameState->PlayerPosition = NewPlayerP;
     GameState->Velocity = newVelocity;
 
-    v2 ScreenCenter = V2((real32)Buffer->Size.Width * 0.5f, (real32)Buffer->Size.Height * 0.5f);
+    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
 
     /**
      * Playing with vectors
@@ -187,7 +192,9 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     real32 Angle = GameState->ElapsedTime;
     System.XAxis = V2(cosf(Angle), sinf(Angle));
-    System.YAxis = V2(-System.XAxis.Y, System.XAxis.X);
+    System.YAxis = V2(-System.XAxis.y, System.XAxis.x);
+
+    FillCoordinateSystem(System, 0xFFFF0000);
 
     DrawCoordinateSystem(Buffer, System, 0xFFFF0000);
 
@@ -199,10 +206,12 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
      */
     u32 GreenColor = 0xFF00FF00;
     v2i GreenSize = V2i(128, 128);
-    v2 GreenPos = V2(Buffer->Size.Width - GreenSize.Width - 100, 100);
+    v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
     DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
 
-    // Read defs.h and print the result
+    /**
+     * Draw a (player) Texture.
+     */
     // debug_read_file_result Result = DebugReadEntireFile("../data/ship.png");
     // debug_read_file_result Result = DebugReadEntireFile("../data/ship2.png");
     debug_read_file_result Result = DebugReadEntireFile("../data/ship3.png");
@@ -213,8 +222,8 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     
     loaded_texture Texture = {};
     v2 Size = {};
-    Size.Width = Width;
-    Size.Height = Height;
+    Size.width = Width;
+    Size.height = Height;
     Texture.Size = Size;
     Texture.Pixels = Pixels;
 

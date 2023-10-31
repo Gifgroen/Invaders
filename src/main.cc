@@ -83,8 +83,8 @@ int GameMain(int Argc, char *Args[])
     GameState->PlayerSize = V2i(500, 500);
     v2i BufferSize = BackBuffer.Size;
     GameState->PlayerPosition = V2((
-        (real32)BufferSize.Width - GameState->PlayerSize.Width) / 2, // X
-        (real32)BufferSize.Height - GameState->PlayerSize.Height - 16 // Y
+        (real32)BufferSize.width - GameState->PlayerSize.width) / 2, // X
+        (real32)BufferSize.height - GameState->PlayerSize.height - 16 // Y
     );
 
     int const GameUpdateHz = 30;

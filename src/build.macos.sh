@@ -1,7 +1,7 @@
 #!/bin/sh
 CC=g++
 
-BASE_DIR="${HOME}/Projects/Games/Invaders/"
+BASE_DIR="${HOME}/Projects/Games/Invaders"
 
 COMMON_COMPILER_FLAGS="-g3 -Wall -std=c++20"
 BUILD_FLAGS="-DDEBUG=1 -DPLATFORM_MACOS=1"
