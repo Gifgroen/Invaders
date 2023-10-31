@@ -111,19 +111,19 @@ struct coordinate_system
 
 internal_func void FillCoordinateSystem(coordinate_system System, u32 Color)
 {
-
+    
 }
 
-internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
+internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color, v2 Scale)
 {
     v2i AxisSize = V2i(8, 8);
     // Origin
     DrawRectangle(Buffer, System.Origin, AxisSize, Color);
 
     // X Axis
-    DrawRectangle(Buffer, System.Origin + 200 * System.XAxis, AxisSize, 0xFF00FF00);
+    DrawRectangle(Buffer, System.Origin + Scale.x * System.XAxis, AxisSize, 0xFF00FF00);
     // Y Axis
-    DrawRectangle(Buffer, System.Origin + 200 * System.YAxis, AxisSize, 0xFF00FFFF);
+    DrawRectangle(Buffer, System.Origin + Scale.y * System.YAxis, AxisSize, 0xFF00FFFF);
 }
 
 internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
@@ -196,9 +196,10 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     FillCoordinateSystem(System, 0xFFFF0000);
 
-    DrawCoordinateSystem(Buffer, System, 0xFFFF0000);
+    v2 Scale = V2(200.0f, 200.0f);
+    DrawCoordinateSystem(Buffer, System, 0xFFFF0000, Scale);
 
-    v2 Point = V2(200.f, 200.f);
+    v2 Point = Scale;
     DrawPointInCoordinateSystem(Buffer, System, Point, 0xFFFFFFFF);
 
     /**
