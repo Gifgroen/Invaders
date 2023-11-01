@@ -20,7 +20,7 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 
     // Player
     GameState->PlayerSize = V2i(500, 500);
-    v2i BufferSize = Buffer->Size;
+    // v2i BufferSize = Buffer->Size;
     GameState->PlayerPosition = V2(
         0,
         0
@@ -53,9 +53,9 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
 
     u32 *Pixel = (u32 *)Buffer->Pixels + Row + Column;
 
-    for (s32 Y = 0; Y < Size.height; ++Y)
+    for (u32 Y = 0; Y < Size.height; ++Y)
     {
-        for (s32 X = 0; X < Size.width; ++X)
+        for (u32 X = 0; X < Size.width; ++X)
         {
             *Pixel++ = Color;
         }
@@ -123,13 +123,13 @@ struct coordinate_system
     loaded_texture *Texture;
 };
 
-internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color, v2 Scale)
+internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
 {
     v2 Points[4] = {
         System.Origin,
-        System.Origin + Scale.x * System.XAxis,
-        System.Origin + Scale.x * System.XAxis + Scale.y * System.YAxis,
-        System.Origin + Scale.y * System.YAxis,
+        System.Origin + System.XAxis,
+        System.Origin + System.XAxis + System.YAxis,
+        System.Origin + System.YAxis,
     };
 
     real32 xMin = Buffer->Size.width;
@@ -157,8 +157,8 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
         }
     }
 
-    real32 InvXAxisLengthSq = 1.0f / LengthSq(Scale.x * System.XAxis);
-    real32 InvYAxisLengthSq = 1.0f / LengthSq(Scale.y * System.YAxis);
+    real32 InvXAxisLengthSq = 1.0f / LengthSq(System.XAxis);
+    real32 InvYAxisLengthSq = 1.0f / LengthSq(System.YAxis);
 
     for (int Y = yMin; Y < yMax; ++Y)
     {
@@ -168,28 +168,27 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
 #if 1
             v2 Point = V2(X, Y);
             v2 d = Point - System.Origin;
-            int Edge0 = Dot(Point - System.Origin, -Perp(System.XAxis));
-            int Edge1 = Dot(d - Scale.x * System.XAxis, -Perp(System.YAxis));
-            int Edge2 = Dot(d - Scale.x * System.XAxis - Scale.y * System.YAxis, Perp(System.XAxis));
-            int Edge3 = Dot(d - Scale.y * System.YAxis, Perp(System.YAxis));
+            int Edge0 = Dot(d, -Perp(System.XAxis));
+            int Edge1 = Dot(d - System.XAxis, -Perp(System.YAxis));
+            int Edge2 = Dot(d - System.XAxis - System.YAxis, Perp(System.XAxis));
+            int Edge3 = Dot(d - System.YAxis, Perp(System.YAxis));
 
             if (Edge0 < 0 && Edge1 < 0 && Edge2 < 0 && Edge3 < 0) 
             {
-                real32 U = InvXAxisLengthSq * Dot(d, Scale.x * System.XAxis);
-                real32 V = InvYAxisLengthSq * Dot(d, Scale.y * System.YAxis);
+                real32 U = InvXAxisLengthSq * Dot(d, System.XAxis);
+                real32 V = InvYAxisLengthSq * Dot(d, System.YAxis);
 
                 Assert( U >= 0.0f && U <= 1.0f );
                 Assert( V >= 0.0f && V <= 1.0f );
 
-                u32 X = (u32)(U * (real32)(System.Texture->Size.width - 1));
-                u32 Y = (u32)(V * (real32)(System.Texture->Size.height - 1));
+                u32 X = (u32)(U * (real32)(System.Texture->Size.width - 3));
+                u32 Y = (u32)(V * (real32)(System.Texture->Size.height - 3));
 
                 Assert(X >= 0 && X < System.Texture->Size.width);
                 Assert(Y >= 0 && Y < System.Texture->Size.height);
 
                 u32 *TexturePixel = (u32*)System.Texture->Pixels + (u32)(Y * System.Texture->Size.width) + X;
                 *Pixel = AlphaBlend(*TexturePixel, *Pixel);
-                // *Pixel = *TexturePixel;
             }
 #else 
             *Pixel = Color;
@@ -198,16 +197,16 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
     }
 }
 
-internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Scale)
+internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System)
 {
     v2i AxisSize = V2i(8, 8);
     // Origin
     DrawRectangle(Buffer, System.Origin, AxisSize, 0x00000000);
 
     // X Axis
-    DrawRectangle(Buffer, System.Origin + Scale.x * System.XAxis, AxisSize, 0xFF0000FF);
+    DrawRectangle(Buffer, System.Origin + System.XAxis, AxisSize, 0xFF0000FF);
     // Y Axis
-    DrawRectangle(Buffer, System.Origin + Scale.y * System.YAxis, AxisSize, 0xFF0000FF);
+    DrawRectangle(Buffer, System.Origin + System.YAxis, AxisSize, 0xFF0000FF);
 }
 
 internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
@@ -264,52 +263,6 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     GameState->PlayerPosition = NewPlayerP;
     GameState->Velocity = newVelocity;
 
-    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
-
-    /**
-     * Playing with vectors
-     */
-    coordinate_system System = {};
-    System.Origin = ScreenCenter;
-
-    GameState->ElapsedTime += GameState->DeltaTime;
-
-    real32 Angle = GameState->ElapsedTime;
-    System.XAxis = V2(cosf(Angle), sinf(Angle));
-    System.YAxis = Perp(System.XAxis);
-
-    // TODO: encorporate Scale in the Axis values; instead of seperate Scale.
-    v2 Scale = V2(200.0f, 200.0f);
-    debug_read_file_result s2Result = DebugReadEntireFile("../data/ship2.png");
-    char unsigned const *s2Contents = (char unsigned const *)s2Result.Content;
-    int s2Width, s2Height, s2Comp;
-    char unsigned *s2Pixels = stbi_load_from_memory(s2Contents, s2Result.ContentSize, &s2Width, &s2Height, &s2Comp, STBI_rgb_alpha);
-    
-    loaded_texture s2Texture = {};
-    v2 s2Size = {};
-    s2Size.width = s2Width;
-    s2Size.height = s2Height;
-    s2Texture.Size = s2Size;
-    s2Texture.Pixels = s2Pixels;
-    System.Texture = &s2Texture;
-    FillCoordinateSystem(Buffer, System, 0xFFFFFF00, Scale);
-
-    stbi_image_free(s2Pixels);
-    DebugFreeFileMemory(s2Result.Content);
-
-    DrawCoordinateSystem(Buffer, System, Scale);
-
-    v2 Point = Scale;
-    DrawPointInCoordinateSystem(Buffer, System, Point, 0xFF00FFFF);
-
-    /**
-     * Draw a Rectangle aligned with the X and Y Axis
-     */
-    u32 GreenColor = 0xFF00FF00;
-    v2i GreenSize = V2i(128, 128);
-    v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
-    DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
-
     /**
      * Draw a (player) Texture.
      */
@@ -331,6 +284,49 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     DrawTexture(Buffer, GameState->PlayerPosition, &Texture);
 
     stbi_image_free(Pixels);
-
     DebugFreeFileMemory(Result.Content);
+
+    /**
+     * Playing with vectors: drawing a rotating texture.
+     */
+    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
+
+    coordinate_system System = {};
+    System.Origin = ScreenCenter;
+
+    GameState->ElapsedTime += GameState->DeltaTime;
+
+    real32 Angle = GameState->ElapsedTime;
+    System.XAxis = 200 * V2(cosf(Angle), sinf(Angle));
+    System.YAxis = Perp(System.XAxis);
+
+    debug_read_file_result s2Result = DebugReadEntireFile("../data/ship2.png");
+    char unsigned const *s2Contents = (char unsigned const *)s2Result.Content;
+    int s2Width, s2Height, s2Comp;
+    char unsigned *s2Pixels = stbi_load_from_memory(s2Contents, s2Result.ContentSize, &s2Width, &s2Height, &s2Comp, STBI_rgb_alpha);
+    
+    loaded_texture s2Texture = {};
+    v2 s2Size = {};
+    s2Size.width = s2Width;
+    s2Size.height = s2Height;
+    s2Texture.Size = s2Size;
+    s2Texture.Pixels = s2Pixels;
+    System.Texture = &s2Texture;
+    FillCoordinateSystem(Buffer, System, 0xFFFFFF00);
+
+    DrawCoordinateSystem(Buffer, System);
+
+    v2 Point = V2(1.0f, 1.0f);
+    DrawPointInCoordinateSystem(Buffer, System, Point, 0xFF00FFFF);
+
+    stbi_image_free(s2Pixels);
+    DebugFreeFileMemory(s2Result.Content);
+
+    /**
+     * Draw a Rectangle aligned with the X and Y Axis
+     */
+    u32 GreenColor = 0xFF00FF00;
+    v2i GreenSize = V2i(128, 128);
+    v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
+    DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
 }
