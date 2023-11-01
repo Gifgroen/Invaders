@@ -6,7 +6,7 @@
       "type": "lldb",
       "request": "launch",
       "cwd": "${workspaceFolder}/../build",
-      "program": "${workspaceFolder}/../build/macos/invaders", // Debugging binaries is not spported :/
+      "program": "${workspaceFolder}/../build/macos/invaders",
       "args": [],
       "preLaunchTask": "Compile invaders (MacOS)"
     },
