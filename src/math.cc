@@ -26,8 +26,7 @@ inline v2 Perp(v2 A)
     return Result;
 }
 
-inline real32
-LengthSq(v2 A)
+inline real32 LengthSq(v2 A)
 {
     real32 Result = Dot(A, A);
     return Result;
