@@ -1,18 +1,10 @@
 #include "game.h"
 
+#include "assets.cc"
 #include "math.cc"
 #include "debug_io.cc"
 
 #include <iostream>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb/stb_image.h"
-
-struct loaded_texture 
-{
-    v2 Size;
-    void *Pixels;
-};
 
 void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
@@ -214,26 +206,7 @@ internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordin
     DrawRectangle(Buffer, System.Origin + Point.x * System.XAxis + Point.y * System.YAxis, V2i(16, 16), Color);
 }
 
-internal_func loaded_texture LoadTexture(char const *Path) 
-{
-    debug_read_file_result FileResult = DebugReadEntireFile(Path);
 
-    int Width, Height, Comp;
-    char unsigned const *Contents = (char unsigned const *)FileResult.Content;
-    char unsigned *Pixels = stbi_load_from_memory(Contents, FileResult.ContentSize, &Width, &Height, &Comp, STBI_rgb_alpha);
-    
-    loaded_texture Result = {};
-    v2 Size = {};
-    Size.width = Width;
-    Size.height = Height;
-    Result.Size = Size;
-    Result.Pixels = Pixels;
-
-    stbi_image_free(Pixels);
-    DebugFreeFileMemory(FileResult.Content);
-
-    return Result;
-}
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
