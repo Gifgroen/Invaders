@@ -286,8 +286,24 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     /** Draw a (player) Texture. */
     char const *PlayerPath = "../data/ship3.png";
-    loaded_texture Texture = LoadTexture(PlayerPath);
-    DrawTexture(Buffer, GameState->PlayerPosition, &Texture);
+    loaded_texture PlayerTexture = LoadTexture(PlayerPath);
+    
+#if 1
+    coordinate_system PlayerSystem = {};
+    PlayerSystem.Origin = GameState->PlayerPosition;
+    
+    PlayerSystem.Texture = &PlayerTexture;
+    PlayerSystem.XAxis = V2(1.0f, 0.0f);
+    PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
+
+    // Scale both axes of the coordinate_system based on texture size(s).
+    PlayerSystem.XAxis *= PlayerTexture.Size.width;
+    PlayerSystem.YAxis *= PlayerTexture.Size.height;
+
+    FillCoordinateSystem(Buffer, PlayerSystem, 0xFFFFFF00);
+#else
+    DrawTexture(Buffer, GameState->PlayerPosition, &PlayerTexture);
+#endif
 
     /** Playing with vectors: drawing a rotating texture. */
     coordinate_system System = {};
