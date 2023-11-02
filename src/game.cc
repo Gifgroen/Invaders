@@ -66,7 +66,6 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
 internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
 {
     real32 SA = (real32)((Texel >> 24) & 0xFF);
-    real32 RSA = SA / 255.0f;
     real32 SR = (real32)((Texel >> 16) & 0xFF);
     real32 SG = (real32)((Texel >> 8) & 0xFF);
     real32 SB = (real32)((Texel >> 0) & 0xFF);
@@ -76,6 +75,7 @@ internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
     real32 DG = (real32)((Pixel >> 8) & 0xFF);
     real32 DB = (real32)((Pixel >> 0) & 0xFF);
 
+    real32 RSA = SA / 255.0f;
     real32 InvRsa = (1.0f - RSA);
     real32 A = SA * RSA + DA * InvRsa;
     real32 R = SR * RSA + DR * InvRsa;
@@ -181,8 +181,8 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
                 Assert( U >= 0.0f && U <= 1.0f );
                 Assert( V >= 0.0f && V <= 1.0f );
 
-                u32 X = (u32)(U * (real32)(System.Texture->Size.width - 3));
-                u32 Y = (u32)(V * (real32)(System.Texture->Size.height - 3));
+                u32 X = (u32)(U * (real32)(System.Texture->Size.width - 3) + 0.5f);
+                u32 Y = (u32)(V * (real32)(System.Texture->Size.height - 3) + 0.5f);
 
                 Assert(X >= 0 && X < System.Texture->Size.width);
                 Assert(Y >= 0 && Y < System.Texture->Size.height);
@@ -211,7 +211,28 @@ internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
 
 internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
 {
-    DrawRectangle(Buffer, System.Origin + Point.x * System.XAxis + Point.y * System.YAxis, V2i(4, 4), Color);
+    DrawRectangle(Buffer, System.Origin + Point.x * System.XAxis + Point.y * System.YAxis, V2i(16, 16), Color);
+}
+
+internal_func loaded_texture LoadTexture(char const *Path) 
+{
+    debug_read_file_result FileResult = DebugReadEntireFile(Path);
+
+    int Width, Height, Comp;
+    char unsigned const *Contents = (char unsigned const *)FileResult.Content;
+    char unsigned *Pixels = stbi_load_from_memory(Contents, FileResult.ContentSize, &Width, &Height, &Comp, STBI_rgb_alpha);
+    
+    loaded_texture Result = {};
+    v2 Size = {};
+    Size.width = Width;
+    Size.height = Height;
+    Result.Size = Size;
+    Result.Pixels = Pixels;
+
+    stbi_image_free(Pixels);
+    DebugFreeFileMemory(FileResult.Content);
+
+    return Result;
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
@@ -256,71 +277,39 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     // TODO: proper friction to "decelerate"
     Acceleration += -0.9f * GameState->Velocity;
 
-    v2 newVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
+    v2 NewVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
 
-    v2 NewPlayerP = 0.5f * Acceleration * Square(GameState->DeltaTime) + newVelocity * GameState->DeltaTime + GameState->PlayerPosition;
+    v2 NewPlayerP = 0.5f * Acceleration * Square(GameState->DeltaTime) + NewVelocity * GameState->DeltaTime + GameState->PlayerPosition;
     
     GameState->PlayerPosition = NewPlayerP;
-    GameState->Velocity = newVelocity;
+    GameState->Velocity = NewVelocity;
 
-    /**
-     * Draw a (player) Texture.
-     */
-    // debug_read_file_result Result = DebugReadEntireFile("../data/ship.png");
-    // debug_read_file_result Result = DebugReadEntireFile("../data/ship2.png");
-    debug_read_file_result Result = DebugReadEntireFile("../data/ship3.png");
-
-    int Width, Height, Comp;
-    char unsigned const *Contents = (char unsigned const *)Result.Content;
-    char unsigned *Pixels = stbi_load_from_memory(Contents, Result.ContentSize, &Width, &Height, &Comp, STBI_rgb_alpha);
-    
-    loaded_texture Texture = {};
-    v2 Size = {};
-    Size.width = Width;
-    Size.height = Height;
-    Texture.Size = Size;
-    Texture.Pixels = Pixels;
-
+    /** Draw a (player) Texture. */
+    char const *PlayerPath = "../data/ship3.png";
+    loaded_texture Texture = LoadTexture(PlayerPath);
     DrawTexture(Buffer, GameState->PlayerPosition, &Texture);
 
-    stbi_image_free(Pixels);
-    DebugFreeFileMemory(Result.Content);
-
-    /**
-     * Playing with vectors: drawing a rotating texture.
-     */
-    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
-
+    /** Playing with vectors: drawing a rotating texture. */
     coordinate_system System = {};
+
+    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
     System.Origin = ScreenCenter;
 
     GameState->ElapsedTime += GameState->DeltaTime;
 
     real32 Angle = GameState->ElapsedTime;
-    System.XAxis = 200 * V2(cosf(Angle), sinf(Angle));
+    System.XAxis = 200.0f * V2(cosf(Angle), sinf(Angle));
     System.YAxis = Perp(System.XAxis);
 
-    debug_read_file_result s2Result = DebugReadEntireFile("../data/ship2.png");
-    char unsigned const *s2Contents = (char unsigned const *)s2Result.Content;
-    int s2Width, s2Height, s2Comp;
-    char unsigned *s2Pixels = stbi_load_from_memory(s2Contents, s2Result.ContentSize, &s2Width, &s2Height, &s2Comp, STBI_rgb_alpha);
-    
-    loaded_texture s2Texture = {};
-    v2 s2Size = {};
-    s2Size.width = s2Width;
-    s2Size.height = s2Height;
-    s2Texture.Size = s2Size;
-    s2Texture.Pixels = s2Pixels;
-    System.Texture = &s2Texture;
+    char const *ShipPath = "../data/ship2.png";
+    loaded_texture ShipTexture = LoadTexture(ShipPath);
+    System.Texture = &ShipTexture;
+
     FillCoordinateSystem(Buffer, System, 0xFFFFFF00);
 
     DrawCoordinateSystem(Buffer, System);
-
-    v2 Point = V2(1.0f, 1.0f);
-    DrawPointInCoordinateSystem(Buffer, System, Point, 0xFF00FFFF);
-
-    stbi_image_free(s2Pixels);
-    DebugFreeFileMemory(s2Result.Content);
+    v2 SystemCenterPoint = V2(0.5f, 0.5f);
+    DrawPointInCoordinateSystem(Buffer, System, SystemCenterPoint, 0xFF00FFFF);
 
     /**
      * Draw a Rectangle aligned with the X and Y Axis
