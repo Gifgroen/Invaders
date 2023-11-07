@@ -10,6 +10,6 @@ struct loaded_texture
     void *Pixels;
 };
 
-internal_func loaded_texture LoadTexture(char const *Path);
+internal_func loaded_texture *LoadTexture(char const *Path);
 
 #endif // ASSETS_H

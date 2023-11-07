@@ -90,14 +90,14 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
         System.Origin,
         System.Origin + System.XAxis,
         System.Origin + System.XAxis + System.YAxis,
-        System.Origin + System.YAxis,
+        System.Origin + System.YAxis
     };
 
     real32 xMin = Buffer->Size.width;
     real32 xMax = 0;
     real32 yMin = Buffer->Size.height;
     real32 yMax = 0;
-    for (int i = 0; i < ArrayCount(Points); ++i )
+    for (int i = 0; i < ArrayCount(Points); ++i)
     {
         v2 Point = Points[i];
         if (Point.x < xMin)
@@ -121,11 +121,11 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
     real32 InvXAxisLengthSq = 1.0f / LengthSq(System.XAxis);
     real32 InvYAxisLengthSq = 1.0f / LengthSq(System.YAxis);
 
-    for (int Y = yMin; Y < yMax; ++Y)
+    for (u32 Y = yMin; Y < yMax; ++Y)
     {
-        for(int X = xMin; X < xMax; ++X)
+        for(u32 X = xMin; X < xMax; ++X)
         {
-            u32 *Pixel = (u32*)Buffer->Pixels + (u32)Y * Buffer->Size.width + (u32)X;
+            u32 *Pixel = (u32*)Buffer->Pixels + Y * Buffer->Size.width + X;
 #if 1
             v2 Point = V2(X, Y);
             v2 d = Point - System.Origin;
@@ -142,8 +142,8 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
                 Assert( U >= 0.0f && U <= 1.0f );
                 Assert( V >= 0.0f && V <= 1.0f );
 
-                u32 X = (u32)(U * (real32)(System.Texture->Size.width - 3) + 0.5f);
-                u32 Y = (u32)(V * (real32)(System.Texture->Size.height - 3) + 0.5f);
+                u32 X = (u32)((U * (real32)(System.Texture->Size.width - 3)) + 0.5f);
+                u32 Y = (u32)((V * (real32)(System.Texture->Size.height - 3)) + 0.5f);
 
                 Assert(X >= 0 && X < System.Texture->Size.width);
                 Assert(Y >= 0 && Y < System.Texture->Size.height);

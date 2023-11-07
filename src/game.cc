@@ -11,15 +11,21 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
     game_state *GameState = (game_state*)GameMemory->TransientStorage;
 
+    char const *Path1 = "../data/ship.png";
+    loaded_texture *Texture1 = LoadTexture(Path1);
+    GameState->Ships[0] = Texture1;
+
+    char const *Path2 = "../data/ship2.png";
+    loaded_texture *Texture2 = LoadTexture(Path2);
+    GameState->Ships[1] = Texture2;
+
+    char const *Path3 = "../data/ship3.png";
+    loaded_texture *Texture3 = LoadTexture(Path3);
+    GameState->Ships[2] = Texture3;   
+
     // Player
-    GameState->PlayerSize = V2i(500, 500);
-    // v2i BufferSize = Buffer->Size;
-    GameState->PlayerPosition = V2(
-        0,
-        0
-        // (real32)BufferSize.width - GameState->PlayerSize.width) / 8, // X
-        // (real32)BufferSize.height - GameState->PlayerSize.height - 16 // Y
-    );
+    GameState->PlayerSize = V2i(GameState->Ships[2]->Size.width, GameState->Ships[2]->Size.height);
+    GameState->PlayerPosition = V2(0, 0);
 
     GameState->Running = true;
     std::cout << "GameInit: running = " << GameState->Running << std::endl;
@@ -69,26 +75,48 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     v2 NewVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
 
+    // TODO: Properly wrap around when leavind the screen on the sides?
     v2 NewPlayerP = 0.5f * Acceleration * Square(GameState->DeltaTime) + NewVelocity * GameState->DeltaTime + GameState->PlayerPosition;
     
+    if (NewPlayerP.x <= 0)
+    {
+        NewPlayerP.x = 0;
+        NewVelocity.x = 0;
+    }
+    if (NewPlayerP.x + GameState->PlayerSize.width >= Buffer->Size.width)
+    {
+        NewPlayerP.x = Buffer->Size.width - GameState->PlayerSize.width;
+        NewVelocity.x = 0;
+    }
+    
+    if (NewPlayerP.y <= 0)
+    {
+        NewPlayerP.y = 0;
+        NewVelocity.y = 0;
+    }
+    if (NewPlayerP.y + GameState->PlayerSize.height >= Buffer->Size.height)
+    {
+        NewPlayerP.y = Buffer->Size.height - GameState->PlayerSize.height;
+        NewVelocity.y = 0;
+    }
+
     GameState->PlayerPosition = NewPlayerP;
     GameState->Velocity = NewVelocity;
 
     /** Draw a (player) Texture. */
-    char const *PlayerPath = "../data/ship3.png";
-    loaded_texture PlayerTexture = LoadTexture(PlayerPath);
-    
+
 #if 1
     coordinate_system PlayerSystem = {};
     PlayerSystem.Origin = GameState->PlayerPosition;
     
-    PlayerSystem.Texture = &PlayerTexture;
+    loaded_texture *PlayerTexture = GameState->Ships[2];
+    PlayerSystem.Texture = PlayerTexture;
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
 
     // Scale both axes of the coordinate_system based on texture size(s).
-    PlayerSystem.XAxis *= PlayerTexture.Size.width;
-    PlayerSystem.YAxis *= PlayerTexture.Size.height;
+    PlayerSystem.XAxis *= PlayerTexture->Size.width;
+    PlayerSystem.YAxis *= PlayerTexture->Size.height;
 
     FillCoordinateSystem(Buffer, PlayerSystem, 0xFFFFFF00);
 #else
@@ -108,8 +136,8 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     System.YAxis = Perp(System.XAxis);
 
     char const *ShipPath = "../data/ship2.png";
-    loaded_texture ShipTexture = LoadTexture(ShipPath);
-    System.Texture = &ShipTexture;
+    loaded_texture *ShipTexture = LoadTexture(ShipPath);
+    System.Texture = ShipTexture;
 
     FillCoordinateSystem(Buffer, System, 0xFFFFFF00);
 

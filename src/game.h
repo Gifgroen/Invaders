@@ -5,6 +5,8 @@
 #include "types.h"
 #include "os_input.h"
 
+#include "assets.h"
+
 struct offscreen_buffer 
 {
     v2i Size;
@@ -22,6 +24,9 @@ struct game_state
     v2 Velocity;
 
     real64 ElapsedTime;
+
+    // Assets
+    loaded_texture *Ships[3];
 };
 
 struct game_memory

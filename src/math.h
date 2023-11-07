@@ -15,6 +15,14 @@ v2i V2i(u32 X, u32 Y);
 
 v2 V2(real32 X, real32 Y);
 
+/**
+ * v2i operators
+ */
+inline v2i operator*(int Lhs, v2i Rhs);
+
+/**
+ * v2 operators
+ */
 inline v2 operator-(v2 A);
 inline v2 operator*(real32 Lhs, v2 Rhs);
 

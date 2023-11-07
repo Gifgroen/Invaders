@@ -52,6 +52,17 @@ v2 V2(real32 X, real32 Y)
 }
 
 /**
+ *  V2i operators
+ */
+inline v2i operator*(int Lhs, v2i Rhs)
+{
+    v2i Result = {};
+    Result.x = Lhs * Rhs.x;
+    Result.y = Lhs * Rhs.y;
+    return Result;
+}
+
+/**
  *  V2 operators
  */
 inline v2 operator-(v2 A) 
