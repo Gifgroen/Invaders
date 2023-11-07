@@ -5,6 +5,8 @@
 #include "types.h"
 #include "os_input.h"
 
+#include "assets.h"
+
 struct offscreen_buffer 
 {
     v2i Size;
@@ -20,6 +22,11 @@ struct game_state
     v2i PlayerSize;
 
     v2 Velocity;
+
+    real64 ElapsedTime;
+
+    // Assets
+    loaded_texture *Ships[3];
 };
 
 struct game_memory
@@ -31,7 +38,7 @@ struct game_memory
     void *PermanentStorage;
 };
 
-typedef void (*GameInit_t)(game_memory *);
+typedef void (*GameInit_t)(game_memory *, offscreen_buffer *);
 typedef void (*GameUpdateAndRender_t)(game_memory *, offscreen_buffer *, game_input*);
 
 extern "C" 
@@ -39,7 +46,7 @@ extern "C"
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 
     #endif
-    void GameInit(game_memory *GameMemory);
+    void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer);
 
     #if defined(PLATFORM_WIN) 
     __declspec(dllexport) 

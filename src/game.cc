@@ -1,57 +1,34 @@
 #include "game.h"
 
-#include "math.cc"
+#include "assets.cc"
 #include "debug_io.cc"
+#include "math.cc"
+#include "render.cc"
 
 #include <iostream>
 
-void GameInit(game_memory *GameMemory)
+void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
     game_state *GameState = (game_state*)GameMemory->TransientStorage;
+
+    char const *Path1 = "../data/ship.png";
+    loaded_texture *Texture1 = LoadTexture(Path1);
+    GameState->Ships[0] = Texture1;
+
+    char const *Path2 = "../data/ship2.png";
+    loaded_texture *Texture2 = LoadTexture(Path2);
+    GameState->Ships[1] = Texture2;
+
+    char const *Path3 = "../data/ship3.png";
+    loaded_texture *Texture3 = LoadTexture(Path3);
+    GameState->Ships[2] = Texture3;   
+
+    // Player
+    GameState->PlayerSize = V2i(GameState->Ships[2]->Size.width, GameState->Ships[2]->Size.height);
+    GameState->PlayerPosition = V2(0, 0);
+
+    GameState->Running = true;
     std::cout << "GameInit: running = " << GameState->Running << std::endl;
-
-    // Read defs.h and print the result
-    debug_read_file_result Result = DebugReadEntireFile("../src/defs.h");
-    char const *Content = (char *)Result.Content;
-    std::cout << "Result: " << Content << std::endl;
-    DebugFreeFileMemory(Result.Content);
-}
-
-internal_func void Clear(offscreen_buffer *Buffer, u32 Color) 
-{
-    v2i Size = Buffer->Size;
-    for (u32 Y = 0; Y < Size.Height; ++Y)
-    {
-        u32 *Row = (u32*)Buffer->Pixels + (Y * Size.Width);
-        for (u32 X = 0; X < Size.Width; ++X)
-        {
-            *(Row + X) = Color;
-        }
-    }
-}
-
-internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
-{
-    // TODO: properly round Origin.X and Origin.Y.
-    u32 Row = (u32)Origin.Y * Buffer->Size.Width;
-    u32 Column = (u32)Origin.X;
-
-    u32 *Target = (u32 *)Buffer->Pixels + Row + Column;
-
-    for (s32 Y = 0; Y < Size.Height; ++Y)
-    {
-        for (s32 X = 0; X < Size.Width; ++X)
-        {
-            *(Target + X) = Color;
-        }
-        Target += Buffer->Size.Width;
-    }
-}
-
-real64 Square(real64 Factor)
-{
-    real64 Result = Factor * Factor;
-    return Result;
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
@@ -67,22 +44,22 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2 MovementDirection = {};
     if (Keyboard.MoveLeft.IsDown || Controller.MoveLeft.IsDown)
     {
-        MovementDirection.X = -1.f;
+        MovementDirection.x = -1.f;
     }
     if (Keyboard.MoveRight.IsDown || Controller.MoveRight.IsDown)
     {
-        MovementDirection.X = 1.f;
+        MovementDirection.x = 1.f;
     }
     if (Keyboard.MoveUp.IsDown || Controller.MoveUp.IsDown)
     {
-        MovementDirection.Y = -1.f;
+        MovementDirection.y = -1.f;
     }
     if (Keyboard.MoveDown.IsDown || Controller.MoveDown.IsDown)
     {
-        MovementDirection.Y = 1.f;
+        MovementDirection.y = 1.f;
     }
 
-    if (MovementDirection.X != 0.f && MovementDirection.Y != 0.f)
+    if (MovementDirection.x != 0.f && MovementDirection.y != 0.f)
     {
         MovementDirection *= 0.707106f;
     }
@@ -90,19 +67,89 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     int PixelsPerMeter = 64;
 
     // TODO: do this `PixelPerMeter` adjustment later.
-    real32 Speed = 5 * PixelsPerMeter; // m/s * pixelsPerMeter = pixels per meter / s
+    real32 Speed = 10 * PixelsPerMeter; // m/s * pixelsPerMeter = pixels per meter / s
     v2 Acceleration = MovementDirection * Speed;
 
     // TODO: proper friction to "decelerate"
     Acceleration += -0.9f * GameState->Velocity;
 
-    v2 newVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
+    v2 NewVelocity = Acceleration * GameState->DeltaTime + GameState->Velocity;
 
-    v2 NewPlayerP = 0.5f * Acceleration * Square(GameState->DeltaTime) + newVelocity * GameState->DeltaTime + GameState->PlayerPosition;
+    // TODO: Properly wrap around when leavind the screen on the sides?
+    v2 NewPlayerP = 0.5f * Acceleration * Square(GameState->DeltaTime) + NewVelocity * GameState->DeltaTime + GameState->PlayerPosition;
     
-    GameState->PlayerPosition = NewPlayerP;
-    GameState->Velocity = newVelocity;
+    if (NewPlayerP.x <= 0)
+    {
+        NewPlayerP.x = 0;
+        NewVelocity.x = 0;
+    }
+    if (NewPlayerP.x + GameState->PlayerSize.width >= Buffer->Size.width)
+    {
+        NewPlayerP.x = Buffer->Size.width - GameState->PlayerSize.width;
+        NewVelocity.x = 0;
+    }
+    
+    if (NewPlayerP.y <= 0)
+    {
+        NewPlayerP.y = 0;
+        NewVelocity.y = 0;
+    }
+    if (NewPlayerP.y + GameState->PlayerSize.height >= Buffer->Size.height)
+    {
+        NewPlayerP.y = Buffer->Size.height - GameState->PlayerSize.height;
+        NewVelocity.y = 0;
+    }
 
-    u32 RectColor = 0xFF00FF00;
-    DrawRectangle(Buffer, GameState->PlayerPosition, GameState->PlayerSize, RectColor);
+    GameState->PlayerPosition = NewPlayerP;
+    GameState->Velocity = NewVelocity;
+
+    /** Draw a (player) Texture. */
+
+#if 1
+    coordinate_system PlayerSystem = {};
+    PlayerSystem.Origin = GameState->PlayerPosition;
+    
+    loaded_texture *PlayerTexture = GameState->Ships[2];
+    PlayerSystem.Texture = PlayerTexture;
+    PlayerSystem.XAxis = V2(1.0f, 0.0f);
+    PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
+
+    // Scale both axes of the coordinate_system based on texture size(s).
+    PlayerSystem.XAxis *= PlayerTexture->Size.width;
+    PlayerSystem.YAxis *= PlayerTexture->Size.height;
+
+    FillCoordinateSystem(Buffer, PlayerSystem, 0xFFFFFF00);
+#else
+    DrawTexture(Buffer, GameState->PlayerPosition, &PlayerTexture);
+#endif
+
+    /** Playing with vectors: drawing a rotating texture. */
+    coordinate_system System = {};
+
+    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
+    System.Origin = ScreenCenter;
+
+    GameState->ElapsedTime += GameState->DeltaTime;
+
+    real32 Angle = GameState->ElapsedTime;
+    System.XAxis = 200.0f * V2(cosf(Angle), sinf(Angle));
+    System.YAxis = Perp(System.XAxis);
+
+    char const *ShipPath = "../data/ship2.png";
+    loaded_texture *ShipTexture = LoadTexture(ShipPath);
+    System.Texture = ShipTexture;
+
+    FillCoordinateSystem(Buffer, System, 0xFFFFFF00);
+
+    DrawCoordinateSystem(Buffer, System);
+    v2 SystemCenterPoint = V2(0.5f, 0.5f);
+    DrawPointInCoordinateSystem(Buffer, System, SystemCenterPoint, 0xFF00FFFF);
+
+    /**
+     * Draw a Rectangle aligned with the X and Y Axis
+     */
+    u32 GreenColor = 0xFF00FF00;
+    v2i GreenSize = V2i(128, 128);
+    v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
+    DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
 }

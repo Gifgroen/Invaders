@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(MacOS - lldb) Invaders",
+      "type": "lldb",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/../build",
+      "program": "${workspaceFolder}/../build/macos/invaders",
+      "args": [],
+      "preLaunchTask": "Compile invaders (MacOS)"
+    },
+    {
+      "name": "(Win - lldb) Invaders",
+      "type": "lldb",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/../build",
+      "program": "${workspaceFolder}/../build/win/main.exe",
+      "args": [],
+      "preLaunchTask": "Compile invaders (Win)"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/me/Projects/Games/Invaders/src",
+      "program": "/Users/me/Projects/Games/Invaders/src/build/Debug/outDebug"
+    }
+  ]
+}

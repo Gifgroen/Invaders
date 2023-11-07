@@ -23,7 +23,7 @@ bool InitWindow(window_state *WindowState)
 
     v2i Size = WindowState->Size;
     u32 WindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
-    WindowState->Window = SDL_CreateWindow(WindowState->Title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Size.Width, Size.Height, WindowFlags);
+    WindowState->Window = SDL_CreateWindow(WindowState->Title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, Size.width, Size.height, WindowFlags);
     if(WindowState->Window == NULL)
     {
         std::cout << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
@@ -37,7 +37,7 @@ bool InitWindow(window_state *WindowState)
         return false;
     }
 
-    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Size.Width, Size.Height);
+    WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Size.width, Size.height);
     if(WindowState->WindowTexture == NULL)
     {
         std::cout << "WindowTexture could not be created! SDL Error: " << SDL_GetError() << std::endl;
@@ -60,10 +60,10 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
         free(Buffer->Pixels);
     }
 
-    std::cout << "Update BackBuffer to new Size = (" << WindowState->Size.Width << ", " << WindowState->Size.Height << std::endl;
+    std::cout << "Update BackBuffer to new Size = (" << WindowState->Size.width << ", " << WindowState->Size.height << ")" << std::endl;
     v2i Size = WindowState->Size;
-    u32 Width = Size.Width;
-    u32 Height = Size.Height;
+    u32 Width = Size.width;
+    u32 Height = Size.height;
     WindowState->WindowTexture = SDL_CreateTexture(WindowState->Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, Width, Height);
 
     Buffer->Size = Size;
@@ -79,8 +79,8 @@ void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen
     {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
         {
-            NewSize->Width = e->data1;
-            NewSize->Height = e->data2;
+            NewSize->width = e->data1;
+            NewSize->height = e->data2;
             UpdateOffscreenBuffer(WindowState, BackBuffer);
         } break;
 
@@ -88,8 +88,8 @@ void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen
         {
             int W, H;
             SDL_GetWindowSize(WindowState->Window, &W, &H);
-            NewSize->Width = W;
-            NewSize->Height = H;
+            NewSize->width = W;
+            NewSize->height = H;
             UpdateOffscreenBuffer(WindowState, BackBuffer);
         } break;
     }
@@ -97,7 +97,7 @@ void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen
 
 void UpdateWindow(window_state *WindowState, void const *Pixels)
 {
-    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, WindowState->Size.Width * sizeof(u32));
+    SDL_UpdateTexture(WindowState->WindowTexture, 0, Pixels, WindowState->Size.width * sizeof(u32));
     SDL_RenderCopy(WindowState->Renderer, WindowState->WindowTexture, 0, 0);
     SDL_RenderPresent(WindowState->Renderer);
 }
