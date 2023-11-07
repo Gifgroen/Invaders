@@ -127,6 +127,7 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
         {
             u32 *Pixel = (u32*)Buffer->Pixels + Y * Buffer->Size.width + X;
 #if 1
+    // TODO: this can/should be optimised!
             v2 Point = V2(X, Y);
             v2 d = Point - System.Origin;
             int Edge0 = Dot(d, -Perp(System.XAxis));
@@ -148,8 +149,8 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
                 Assert(X >= 0 && X < System.Texture->Size.width);
                 Assert(Y >= 0 && Y < System.Texture->Size.height);
 
-                u32 *TexturePixel = (u32*)System.Texture->Pixels + (u32)(Y * System.Texture->Size.width) + X;
-                *Pixel = AlphaBlend(*TexturePixel, *Pixel);
+                u32 *Texel = (u32*)System.Texture->Pixels + (u32)(Y * System.Texture->Size.width) + X;
+                *Pixel = AlphaBlend(*Texel, *Pixel);
             }
 #else 
             *Pixel = Color;
