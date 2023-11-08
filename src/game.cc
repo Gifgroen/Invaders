@@ -104,12 +104,13 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     GameState->Velocity = NewVelocity;
 
     /** Draw a (player) Texture. */
+    loaded_texture *PlayerTexture = GameState->Ships[2];
 
 #if 1
     coordinate_system PlayerSystem = {};
     PlayerSystem.Origin = GameState->PlayerPosition;
     
-    loaded_texture *PlayerTexture = GameState->Ships[2];
+    
     PlayerSystem.Texture = PlayerTexture;
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
@@ -152,4 +153,34 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2i GreenSize = V2i(128, 128);
     v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
     DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
+}
+
+void GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameState)
+{
+    local_persist real32 tSine;
+    s16 ToneVolume = 3000;
+
+    int ToneHz = GameState->ToneHz > 0 ? GameState->ToneHz : 256;
+    int WavePeriod = SoundBuffer->SamplesPerSecond / ToneHz;
+
+    s16 *SampleOut = SoundBuffer->Samples;
+    for(int SampleIndex = 0; SampleIndex < SoundBuffer->SampleCount; ++SampleIndex)
+    {
+        real32 SineValue = sinf(tSine);
+        s16 SampleValue = (s16)(SineValue * ToneVolume);
+        *SampleOut++ = SampleValue;
+        *SampleOut++ = SampleValue;
+
+        tSine += 2.0f * Pi32 * 1.0f / (real32)WavePeriod;
+        if (tSine > 2.0f * Pi32) 
+        {
+            tSine -= 2.0f * Pi32;
+        }
+    }
+}
+
+void GameGetSoundSamples(game_memory *GameMemory, game_sound_output_buffer *SoundBuffer) 
+{
+    game_state *GameState = (game_state *)GameMemory->TransientStorage;
+    GameOutputSound(SoundBuffer, GameState);
 }

@@ -11,6 +11,7 @@ struct game_lib
 
     GameInit_t GameInit;
     GameUpdateAndRender_t GameUpdateAndRender;
+    GameGetSoundSamples_t GameGetSoundSamples;
 };
 
 internal_func int LoadGameCode(game_lib *GameCode);

@@ -25,8 +25,17 @@ struct game_state
 
     real64 ElapsedTime;
 
+    int ToneHz;
+
     // Assets
     loaded_texture *Ships[3];
+};
+
+struct game_sound_output_buffer
+{
+    int SamplesPerSecond;
+    int SampleCount;
+    s16 *Samples;
 };
 
 struct game_memory
@@ -40,6 +49,7 @@ struct game_memory
 
 typedef void (*GameInit_t)(game_memory *, offscreen_buffer *);
 typedef void (*GameUpdateAndRender_t)(game_memory *, offscreen_buffer *, game_input*);
+typedef void (*GameGetSoundSamples_t)(game_memory *, game_sound_output_buffer *);
 
 extern "C" 
 {
@@ -48,10 +58,15 @@ extern "C"
     #endif
     void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer);
 
-    #if defined(PLATFORM_WIN) 
-    __declspec(dllexport) 
+    #if defined(PLATFORM_WIN)
+    __declspec(dllexport)
     #endif
     void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input);
+
+    #if defined(PLATFORM_WIN)
+    __declspec(dllexport)
+    #endif
+    void GameGetSoundSamples(game_memory *GameMemory, game_sound_output_buffer *SoundBuffer);
 }
 
 #endif // GAME_H

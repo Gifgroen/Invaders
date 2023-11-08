@@ -43,6 +43,7 @@ internal_func int LoadGameCode(game_lib *GameCode)
 
     GameCode->GameInit = (GameInit_t)GetProcAddress((HMODULE)GameCode->LibHandle, "GameInit");
     GameCode->GameUpdateAndRender = (GameUpdateAndRender_t)GetProcAddress((HMODULE)GameCode->LibHandle, "GameUpdateAndRender");
+    GameCode->GameGetSoundsSamples = (GameGetSoundSamples_t)GetProcAddress((HMODULE)GameCode->LibHandle, "GameGetSoundSamples");
     if (GameCode->GameUpdateAndRender == NULL)
     {
         std::cout << "Cannot load required symbol(s): " << GetLastError() << std::endl;
@@ -71,6 +72,7 @@ internal_func int LoadGameCode(game_lib *GameCode)
     dlerror();  // reset dl errors
     GameCode->GameInit = (GameInit_t)dlsym(GameCode->LibHandle, "GameInit");
     GameCode->GameUpdateAndRender = (GameUpdateAndRender_t)dlsym(GameCode->LibHandle, "GameUpdateAndRender");
+    GameCode->GameGetSoundSamples = (GameGetSoundSamples_t)dlsym(GameCode->LibHandle, "GameGetSoundSamples");
 
     char const *DlSymError = dlerror();
     if (DlSymError)

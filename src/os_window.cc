@@ -14,7 +14,7 @@
 
 bool InitWindow(window_state *WindowState)
 {
-    u32 InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER;
+    u32 InitFlags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER;
     if(SDL_Init(InitFlags) < 0)
     {
         std::cout << "Init failed! " <<  SDL_GetError() << std::endl;

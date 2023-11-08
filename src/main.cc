@@ -21,8 +21,14 @@
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"
+#include "os_audio.cc"
 #include "os_input.cc"
 #include "os_window.cc"
+
+#if DEBUG
+#include "debug_sync_display.h"
+#include "debug_sync_display.cc"
+#endif
 
 internal_func int GetWindowRefreshRate(SDL_Window *Window)
 {
@@ -89,6 +95,21 @@ int GameMain(int Argc, char *Args[])
 
     GameState->DeltaTime = 1.f / (real32)GameUpdateHz;
 
+    sdl_sound_output SoundOutput = {};
+    SoundOutput.SamplesPerSecond = 48000;
+    SoundOutput.ToneHz = 256;
+    SoundOutput.ToneVolume = 3000;
+    SoundOutput.RunningSampleIndex = 0;
+    SoundOutput.WavePeriod = SoundOutput.SamplesPerSecond / SoundOutput.ToneHz;
+    SoundOutput.BytesPerSample = sizeof(s16) * 2;
+    SoundOutput.SecondaryBufferSize = SoundOutput.SamplesPerSecond * SoundOutput.BytesPerSample;
+    // TODO: compute variance in the frame time so we can choose what the lowest reasonable value is.
+    SoundOutput.SafetyBytes = 0.25 * ((SoundOutput.SamplesPerSecond * SoundOutput.BytesPerSample) / GameUpdateHz);
+
+    InitAudio(SoundOutput.SamplesPerSecond, SoundOutput.SecondaryBufferSize);
+    s16 *Samples = (s16 *)calloc(SoundOutput.SamplesPerSecond, SoundOutput.BytesPerSample);
+    bool SoundIsPlaying = false;
+
     // Setup Input
     game_input Input[2] = {};
     game_input *OldInput = &Input[0];
@@ -102,6 +123,9 @@ int GameMain(int Argc, char *Args[])
     // Administration to enforce a framerate of GameUpdateHz
     u64 StartCycleCount = __rdtsc();
     u64 StartTime = SDL_GetPerformanceCounter();
+
+    sdl_debug_time_marker DebugTimeMarkers[GameUpdateHz / 2] = {};
+    u64 DebugLastPlayCursorIndex = 0;
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
 
@@ -153,13 +177,70 @@ int GameMain(int Argc, char *Args[])
         // TODO: simulate game
         GameLib.GameUpdateAndRender(&GameMemory, &BackBuffer, NewInput);
 
+        // REGION: Write Audio to Ringbuffer
+
+        SDL_LockAudio();
+        
+        sdl_audio_buffer_index AudioBufferIndex = PositionAudioBuffer(&SoundOutput, GameUpdateHz);
+
+        game_sound_output_buffer SoundBuffer = {};
+        SoundBuffer.SamplesPerSecond = SoundOutput.SamplesPerSecond;
+        SoundBuffer.SampleCount = AudioBufferIndex.BytesToWrite / SoundOutput.BytesPerSample;
+        SoundBuffer.Samples = Samples;
+
+        GameLib.GameGetSoundSamples(&GameMemory, &SoundBuffer);
+
+        SDL_UnlockAudio();
+
+        FillSoundBuffer(&SoundOutput, AudioBufferIndex.ByteToLock, AudioBufferIndex.BytesToWrite, &SoundBuffer); 
+
+#if DEBUG // SOUND SYNC DEBUG
+        int UnwrappedWriteCursor = AudioRingBuffer.WriteCursor;
+        if (UnwrappedWriteCursor < AudioRingBuffer.PlayCursor)
+        {
+            UnwrappedWriteCursor += SoundOutput.SecondaryBufferSize;
+        }
+
+        int AudioLatencyBytes = UnwrappedWriteCursor - AudioRingBuffer.PlayCursor;
+        real32 AudioLatencySeconds = (((real32)AudioLatencyBytes / (real32)SoundOutput.BytesPerSample) / (real32)SoundOutput.SamplesPerSecond);
+        std::cout << "BTL: " << AudioBufferIndex.ByteToLock << ", ";
+        std::cout << "TC: " << AudioBufferIndex.TargetCursor << ", ";
+        std::cout << "BTW: " << AudioBufferIndex.BytesToWrite << ", ";
+        std::cout << "- PC: " << AudioRingBuffer.PlayCursor << ", ";
+        std::cout << "WC:"  << AudioRingBuffer.WriteCursor << ", ";
+        std::cout << "DELTA: " << AudioLatencyBytes << " (" << AudioLatencySeconds << "s)";
+        std::cout << std::endl;
+#endif
+        if(!SoundIsPlaying)
+        {
+            SDL_PauseAudio(0);
+            SoundIsPlaying = true;
+        }
+
+        // END REGION: Write Audio to Ringbuffer
+
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 
         // Measure the Game time, ignore SDL Update time.
         u64 EndTime = SDL_GetPerformanceCounter();
 
+#if DEBUG
+        SDLDebugSyncDisplay(&BackBuffer, ArrayCount(DebugTimeMarkers), DebugTimeMarkers, &SoundOutput, TargetSecondsPerFrame);
+#endif
+
         UpdateWindow(&WindowState, BackBuffer.Pixels);
 
+#if DEBUG
+        {
+            sdl_debug_time_marker *marker = &DebugTimeMarkers[DebugLastPlayCursorIndex++];
+            if (DebugLastPlayCursorIndex >= ArrayCount(DebugTimeMarkers))
+            {
+                DebugLastPlayCursorIndex = 0;
+            }
+            marker->PlayCursor = AudioRingBuffer.PlayCursor;
+            marker->WriteCursor = AudioRingBuffer.WriteCursor;
+        }
+#endif
         game_input *Tmp = OldInput;
         OldInput = NewInput;
         NewInput = Tmp;
