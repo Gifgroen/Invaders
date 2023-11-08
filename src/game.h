@@ -28,7 +28,7 @@ struct game_state
     int ToneHz;
 
     // Assets
-    loaded_texture *Ships[3];
+    loaded_texture Ships[3];
 };
 
 struct game_sound_output_buffer

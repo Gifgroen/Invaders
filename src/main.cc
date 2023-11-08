@@ -14,6 +14,15 @@
 // TODO: Assert and crash?
 #endif
 
+#if defined(PLATFORM_WIN)
+#include <memoryapi.h>
+#elif defined(PLATFORM_MACOS)
+#include <sys/types.h>
+#include <sys/mman.h>
+#else
+// TODO: Assert and crash?
+#endif
+
 #include "defs.h"
 #include "types.h"
 #include "game.h"
@@ -28,6 +37,9 @@
 #if DEBUG
 #include "debug_sync_display.h"
 #include "debug_sync_display.cc"
+
+#include "debug_input_recording.h"
+#include "debug_input_recording.cc"
 #endif
 
 internal_func int GetWindowRefreshRate(SDL_Window *Window)
@@ -80,10 +92,24 @@ int GameMain(int Argc, char *Args[])
     game_memory GameMemory = {};
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
-    GameMemory.TransientStorage = calloc(GameMemory.TransientStorageSize + GameMemory.PermanentStorageSize, sizeof(u8));
-    GameMemory.PermanentStorage = ((u8*)GameMemory.TransientStorage) + GameMemory.TransientStorageSize;
 
-    game_state *GameState = (game_state *)GameMemory.TransientStorage;
+debug_input_recording InputRecorder = {};
+#if DEBUG
+    void *BaseAddress = (void *)Terabytes(2);
+#else
+    void *BaseAddress = (void *)(0);
+#endif
+
+    u64 TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+    InputRecorder.TotalMemorySize = TotalStorageSize;
+#if defined(PLATFORM_WIN)
+    GameMemory.PermanentStorage = VirtualAlloc(BaseAddress, TotalStorageSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+#elif defined(PLATFORM_MACOS)
+    GameMemory.PermanentStorage = mmap(BaseAddress, TotalStorageSize, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+#endif
+    GameMemory.TransientStorage = (u8*)(GameMemory.PermanentStorage) + GameMemory.PermanentStorageSize;
+    Assert(GameMemory.PermanentStorage);
+    Assert(GameMemory.TransientStorage);
 
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
@@ -93,6 +119,7 @@ int GameMain(int Argc, char *Args[])
         std::cout << "Device capable refresh rate is " << DetectedFrameRate << " Hz, but Game runs in " << GameUpdateHz << " Hz\n";
     }
 
+    game_state *GameState = (game_state *)GameMemory.TransientStorage;
     GameState->DeltaTime = 1.f / (real32)GameUpdateHz;
 
     sdl_sound_output SoundOutput = {};
@@ -129,13 +156,11 @@ int GameMain(int Argc, char *Args[])
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
 
-    std::cout << "Ok, lets run!" << std::endl;
-
     while (GameState->Running)
     {
         game_controller *OldKeyboardController = GetKeyboardForIndex(OldInput, 0);
         game_controller *NewKeyboardController = GetKeyboardForIndex(NewInput, 0);
-        // *NewKeyboardController = {};
+        *NewKeyboardController = {};
         for(u64 ButtonIndex = 0; ButtonIndex < ArrayCount(NewKeyboardController->Buttons); ++ButtonIndex)
         {
             game_button_state *NewButtons = &(NewKeyboardController->Buttons[ButtonIndex]);
@@ -162,11 +187,26 @@ int GameMain(int Argc, char *Args[])
                 case SDL_KEYUP:
                 case SDL_KEYDOWN:
                 {
+                    #if DEBUG
+                    DebugHandleKeyEvent(e.key, &WindowState, &InputRecorder, NewKeyboardController);
+                    #endif
                     ProcessKeyboardEvents(&e, GameState, NewKeyboardController);
                 } break;
             }
         }
         HandleControllerEvents(OldInput, NewInput);
+
+#if DEBUG
+        if (InputRecorder.Action == record_action::Recording)
+        {
+            DebugRecordInput(&InputRecorder, NewInput, &GameMemory);
+        }
+        if (InputRecorder.Action == record_action::Playing)
+        {
+            DebugEndRecordInput(&InputRecorder);
+            DebugPlaybackInput(&InputRecorder, NewInput, &GameMemory);
+        }
+#endif
 
         if (GameCodeChanged(&GameLib) > GameLib.LastWriteTime)
         {
