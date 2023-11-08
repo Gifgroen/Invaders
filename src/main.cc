@@ -15,7 +15,7 @@
 #endif
 
 #if defined(PLATFORM_WIN)
-#include <memoryapi.h>
+// #include <memoryapi.h>
 #elif defined(PLATFORM_MACOS)
 #include <sys/types.h>
 #include <sys/mman.h>

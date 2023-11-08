@@ -40,11 +40,11 @@ struct game_sound_output_buffer
 
 struct game_memory
 {
-    u64 TransientStorageSize;
-    void *TransientStorage;
-
     u64 PermanentStorageSize;
     void *PermanentStorage;
+
+    u64 TransientStorageSize;
+    void *TransientStorage;
 };
 
 typedef void (*GameInit_t)(game_memory *, offscreen_buffer *);
