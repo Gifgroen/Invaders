@@ -119,7 +119,7 @@ debug_input_recording InputRecorder = {};
         std::cout << "Device capable refresh rate is " << DetectedFrameRate << " Hz, but Game runs in " << GameUpdateHz << " Hz\n";
     }
 
-    game_state *GameState = (game_state *)GameMemory.TransientStorage;
+    game_state *GameState = (game_state *)GameMemory.PermanentStorage;
     GameState->DeltaTime = 1.f / (real32)GameUpdateHz;
 
     sdl_sound_output SoundOutput = {};

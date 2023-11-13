@@ -6,6 +6,7 @@
 #include "os_input.h"
 
 #include "assets.h"
+#include "memory.h"
 
 struct offscreen_buffer 
 {
@@ -17,6 +18,8 @@ struct game_state
 {
     bool Running;
     real64 DeltaTime;
+
+    memory_journal Journal;
 
     v2 PlayerPosition;
     v2i PlayerSize;

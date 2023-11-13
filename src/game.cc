@@ -3,13 +3,20 @@
 #include "assets.cc"
 #include "debug_io.cc"
 #include "math.cc"
+#include "memory.cc"
 #include "render.cc"
 
 #include <iostream>
 
+global_variable coordinate_system *NewSystem;
+
 void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
-    game_state *GameState = (game_state*)GameMemory->TransientStorage;
+    game_state *GameState = (game_state*)GameMemory->PermanentStorage;
+
+    u8 *Base = (u8 *)GameMemory->PermanentStorage + sizeof(game_state);
+    memory_size TotalSize = GameMemory->PermanentStorageSize - sizeof(game_state);
+    InitialiseJournal(&GameState->Journal, Base, TotalSize);
 
     char const *Path1 = "../data/ship.png";
     loaded_texture Texture1 = LoadTexture(Path1);
@@ -30,12 +37,26 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     GameState->ToneHz = 256;
 
     GameState->Running = true;
-    std::cout << "GameInit: running = " << GameState->Running << std::endl;
+
+    // Memory test
+    NewSystem = PushStruct(&GameState->Journal, coordinate_system);
+    NewSystem->XAxis = V2(1.0f, 0.0f);
+    NewSystem->YAxis = Perp(NewSystem->XAxis);
+    loaded_texture *Texture = &GameState->Ships[0];
+    NewSystem->Texture = Texture;
+
+    NewSystem->Origin = V2(
+        Buffer->Size.width - Texture->Size.width - 50.0f, 
+        Buffer->Size.height - Texture->Size.height - 50.0f 
+    );
+
+    NewSystem->XAxis *= Texture->Size.width;
+    NewSystem->YAxis *= Texture->Size.height;
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
-    game_state *GameState = (game_state*)GameMemory->TransientStorage;
+    game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
     // GameState->ToneHz = 128;
 
@@ -113,8 +134,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 #if 1
     coordinate_system PlayerSystem = {};
     PlayerSystem.Origin = GameState->PlayerPosition;
-    
-    
+
     PlayerSystem.Texture = &PlayerTexture;
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
@@ -127,6 +147,8 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 #else
     DrawTexture(Buffer, GameState->PlayerPosition, &PlayerTexture);
 #endif
+
+    FillCoordinateSystem(Buffer, *NewSystem, 0xFF0000FF);
 
     /** Playing with vectors: drawing a rotating texture. */
     coordinate_system System = {};
@@ -148,9 +170,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2 SystemCenterPoint = V2(0.5f, 0.5f);
     DrawPointInCoordinateSystem(Buffer, System, SystemCenterPoint, 0xFF00FFFF);
 
-    /**
-     * Draw a Rectangle aligned with the X and Y Axis
-     */
+    /** Draw a Rectangle aligned with the X and Y Axis */
     u32 GreenColor = 0xFF00FF00;
     v2i GreenSize = V2i(128, 128);
     v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
@@ -183,6 +203,6 @@ void GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameStat
 
 void GameGetSoundSamples(game_memory *GameMemory, game_sound_output_buffer *SoundBuffer) 
 {
-    game_state *GameState = (game_state *)GameMemory->TransientStorage;
+    game_state *GameState = (game_state *)GameMemory->PermanentStorage;
     GameOutputSound(SoundBuffer, GameState);
 }
