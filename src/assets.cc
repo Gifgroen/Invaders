@@ -21,7 +21,7 @@ internal_func loaded_texture LoadTexture(char const *Path)
     Result.Pixels = Pixels;
 
     // stbi_image_free(Pixels);
-    // DebugFreeFileMemory(FileResult.Content);
+    DebugFreeFileMemory(FileResult.Content);
 
     return Result;
 }

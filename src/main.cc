@@ -23,10 +23,6 @@
 // TODO: Assert and crash?
 #endif
 
-#include "defs.h"
-#include "types.h"
-#include "game.h"
-
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"
@@ -35,11 +31,8 @@
 #include "os_window.cc"
 
 #if DEBUG
-#include "debug_sync_display.h"
-#include "debug_sync_display.cc"
-
-#include "debug_input_recording.h"
-#include "debug_input_recording.cc"
+#include "debug/debug_sync_display.cc"
+#include "debug/debug_input_recording.cc"
 #endif
 
 internal_func int GetWindowRefreshRate(SDL_Window *Window)

@@ -1,12 +1,12 @@
 #ifndef DEBUG_SYNC_DISPLAY_H
 #define DEBUG_SYNC_DISPLAY_H
 
-#include "game.h"
+// #include "game.h"
 
-#include "defs.h"
-#include "types.h"
+#include "../defs.h"
+#include "../types.h"
 
-#include "os_audio.h"
+#include "../os_audio.h"
 
 struct sdl_debug_time_marker 
 {

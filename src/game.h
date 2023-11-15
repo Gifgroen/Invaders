@@ -3,10 +3,10 @@
 
 #include "defs.h"
 #include "types.h"
-#include "os_input.h"
 
 #include "assets.h"
 #include "memory.h"
+#include "os_input.h"
 
 struct offscreen_buffer 
 {
