@@ -6,7 +6,7 @@
 
 struct debug_read_file_result
 {
-    u32 ContentSize;
+    u64 ContentSize;
     void *Content;
 };
 

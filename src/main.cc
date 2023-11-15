@@ -70,15 +70,14 @@ int GameMain(int Argc, char *Args[])
     game_lib GameLib = {};
     GameLib.BasePath = SDL_GetBasePath();
 
+    char Result[2048];
 #if defined(PLATFORM_MACOS)
-    char Result[1024];
     strcat(Result, GameLib.BasePath);
     strcat(Result, "/libgame.so");
     GameLib.LibPath = Result;
 #elif defined(PLATFORM_WIN)
-    char Result[1024];
     strcat(Result, GameLib.BasePath);
-    strcat(Result , "/libgame.dll");
+    strcat(Result , "libgame.dll");
     GameLib.LibPath = Result;
 #endif
     if (LoadGameCode(&GameLib) != 0)

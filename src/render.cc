@@ -58,31 +58,31 @@ internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
         | ((u32)(B + 0.5f) << 0);
 }
 
-// internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
-// {
-//     Assert(Origin.x >= 0 && Origin.x < Origin.x + Texture->Size.width);
-//     Assert(Origin.y >= 0 && Origin.y < Origin.y + Texture->Size.height);
+internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
+{
+    Assert(Origin.x >= 0 && Origin.x < Origin.x + Texture->Size.width);
+    Assert(Origin.y >= 0 && Origin.y < Origin.y + Texture->Size.height);
 
-//     u32 TextureWidth = Texture->Size.width;
-//     u32 TextureHeight = Texture->Size.height;
+    u32 TextureWidth = Texture->Size.width;
+    u32 TextureHeight = Texture->Size.height;
 
-//     v2i BufferSize = Buffer->Size;
+    v2i BufferSize = Buffer->Size;
 
-//     u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.y * BufferSize.width) + (u32)Origin.x;
-//     u32 *TexturePixel = (u32*)Texture->Pixels;
+    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.y * BufferSize.width) + (u32)Origin.x;
+    u32 *TexturePixel = (u32*)Texture->Pixels;
 
-//     for (int Y = 0; Y < TextureHeight; ++Y) 
-//     {
-//         for (int X = 0; X < TextureWidth; ++X)
-//         {
-//             *Pixels = AlphaBlend(*TexturePixel, *Pixels);
+    for (int Y = 0; Y < TextureHeight; ++Y)
+    {
+        for (int X = 0; X < TextureWidth; ++X)
+        {
+            *Pixels = AlphaBlend(*TexturePixel, *Pixels);
 
-//             Pixels++;
-//             TexturePixel++;
-//         }
-//         Pixels += BufferSize.width - TextureWidth;
-//     }
-// }
+            Pixels++;
+            TexturePixel++;
+        }
+        Pixels += BufferSize.width - TextureWidth;
+    }
+}
 
 internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
 {

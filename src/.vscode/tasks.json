@@ -11,8 +11,8 @@
         {
             "label": "Compile invaders (Win)",
             "type": "shell",
-            "command": "",
-            "args": ["${workspaceFolder}/build.win.bat"],
+            "command": "${workspaceFolder}\\build.win.bat",
+            "args": [],
             "group": "build"
         }
     ]
