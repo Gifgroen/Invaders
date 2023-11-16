@@ -14,7 +14,7 @@ internal_func void *_PushStruct(memory_journal *Journal, memory_size Size)
 
 internal_func void InitialiseJournal(memory_journal *Journal, u8 *Base, u64 Size)
 {
-    Journal->Size = Size;
     Journal->Base = Base;
+    Journal->Size = Size;
     Journal->Used = 0;
 }

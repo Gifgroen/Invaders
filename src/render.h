@@ -4,7 +4,7 @@
 #include "assets.h"
 #include "game.h"
 
-struct coordinate_system 
+struct coordinate_system
 {
     v2 Origin;
     v2 XAxis;

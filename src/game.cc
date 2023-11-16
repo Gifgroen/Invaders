@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include "assets.cc"
+// TODO: get rid of Debug IO and provide a struct with func pointers that offer i/o features.
 #include "debug_io.cc"
 #include "math.cc"
 #include "memory.cc"
@@ -31,7 +32,8 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     GameState->Ships[2] = Texture3;   
 
     // Player
-    GameState->PlayerSize = V2i(GameState->Ships[2].Size.width, GameState->Ships[2].Size.height);
+    v2 ShipSize = GameState->Ships[2].Size;
+    GameState->PlayerSize = V2i(ShipSize.width, ShipSize.height);
     GameState->PlayerPosition = V2(0, 0);
 
     GameState->ToneHz = 256;
@@ -45,9 +47,10 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     loaded_texture *Texture = &GameState->Ships[0];
     NewSystem->Texture = Texture;
 
+    v2i ScreenSize = Buffer->Size;
     NewSystem->Origin = V2(
-        Buffer->Size.width - Texture->Size.width - 50.0f, 
-        Buffer->Size.height - Texture->Size.height - 50.0f 
+        ScreenSize.width - Texture->Size.width - 50.0f, 
+        ScreenSize.height - Texture->Size.height - 50.0f 
     );
 
     NewSystem->XAxis *= Texture->Size.width;
@@ -175,6 +178,12 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2i GreenSize = V2i(128, 128);
     v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
     DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
+
+    v2 OutlineOrigin = V2(100.0f, 100.0f);
+    v2i OutlineSize = V2i(256, 256);
+    u16 Thickness = 4;
+    u32 OutlineColor = 0xFFFFFFFF;
+    DrawOutline(Buffer, OutlineOrigin, OutlineSize, Thickness, OutlineColor);
 }
 
 void GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameState)
