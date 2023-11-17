@@ -71,10 +71,12 @@ int GameMain(int Argc, char *Args[])
     GameLib.BasePath = SDL_GetBasePath();
 
 #if defined(PLATFORM_MACOS)
-    char Result[1024];
-    strcat(Result, GameLib.BasePath);
-    strcat(Result, "libgame.so");
-    GameLib.LibPath = Result;
+    // TODO: investigate why this breaks libgame.so reload
+    // char Result[1024];
+    // strcat(Result, GameLib.BasePath);
+    // strcat(Result, "libgame.so");
+    // GameLib.LibPath = Result;
+    GameLib.LibPath = "../build/macos/libgame.so";
 #elif defined(PLATFORM_WIN)
     char Result[2048];
     strcat(Result, GameLib.BasePath);

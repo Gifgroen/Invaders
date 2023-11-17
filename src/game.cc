@@ -151,7 +151,10 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     DrawTexture(Buffer, GameState->PlayerPosition, &PlayerTexture);
 #endif
 
-    FillCoordinateSystem(Buffer, *NewSystem, 0xFF0000FF);
+    if (NewSystem) 
+    {
+        FillCoordinateSystem(Buffer, *NewSystem, 0xFF0000FF);
+    }
 
     /** Playing with vectors: drawing a rotating texture. */
     coordinate_system System = {};
