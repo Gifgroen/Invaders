@@ -68,19 +68,25 @@ int GameMain(int Argc, char *Args[])
     }
 
     game_lib GameLib = {};
-    GameLib.BasePath = SDL_GetBasePath();
+    char const *BasePath = SDL_GetBasePath();
+    GameLib.BasePath = BasePath;
 
 #if defined(PLATFORM_MACOS)
-    // TODO: investigate why this breaks libgame.so reload
-    // char Result[1024];
-    // strcat(Result, GameLib.BasePath);
-    // strcat(Result, "libgame.so");
-    // GameLib.LibPath = Result;
+#if DEBUG 
+    // TODO: this won't work when distributing the build...
     GameLib.LibPath = "../build/macos/libgame.so";
+#else 
+    char const * FileName = "libgame.so";
+    size_t PathLen = strlen(BasePath) + strlen(FileName) + 1;
+    char Result[PathLen];
+    snprintf(Result, PathLen, "%s%s", BasePath, FileName);
+    GameLib.LibPath = Result;
+#endif
 #elif defined(PLATFORM_WIN)
-    char Result[2048];
-    strcat(Result, GameLib.BasePath);
-    strcat(Result , "libgame.dll");
+    char const * FileName = "libgame.dll";
+    size_t PathLen = strlen(BasePath) + strlen(FileName) + 1;
+    char Result[PathLen];
+    snprintf(Result, PathLen, "%s%s", BasePath, FileName);
     GameLib.LibPath = Result;
 #endif
     if (LoadGameCode(&GameLib) != 0)
@@ -96,15 +102,19 @@ int GameMain(int Argc, char *Args[])
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
 
-debug_input_recording InputRecorder = {};
 #if DEBUG
     void *BaseAddress = (void *)Terabytes(2);
 #else
     void *BaseAddress = (void *)(0);
 #endif
 
-    u64 TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+
+#if DEBUG
+    debug_input_recording InputRecorder = {};
     InputRecorder.TotalMemorySize = TotalStorageSize;
+#endif
+
 #if defined(PLATFORM_WIN)
     GameMemory.PermanentStorage = VirtualAlloc(BaseAddress, TotalStorageSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 #elif defined(PLATFORM_MACOS)
@@ -154,7 +164,9 @@ debug_input_recording InputRecorder = {};
     u64 StartCycleCount = __rdtsc();
     u64 StartTime = SDL_GetPerformanceCounter();
 
+#if DEBUG
     sdl_debug_time_marker DebugTimeMarkers[GameUpdateHz / 2] = {};
+#endif
     u64 DebugLastPlayCursorIndex = 0;
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
