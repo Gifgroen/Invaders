@@ -19,6 +19,7 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     memory_size TotalSize = GameMemory->PermanentStorageSize - sizeof(game_state);
     InitialiseJournal(&GameState->Journal, Base, TotalSize);
 
+    std::cout << "Loading assets from guessed relative path; should use assetPath = " << GameMemory->AssetPath << std::endl; 
     char const *Path1 = "../data/ship.png";
     loaded_texture Texture1 = LoadTexture(Path1);
     GameState->Ships[0] = Texture1;

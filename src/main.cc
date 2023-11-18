@@ -68,8 +68,7 @@ int GameMain(int Argc, char *Args[])
     }
 
     game_lib GameLib = {};
-    char const *BasePath = SDL_GetBasePath();
-    GameLib.BasePath = BasePath;
+    char const *ExecutableBasePath = SDL_GetBasePath();
 
 #if defined(PLATFORM_MACOS)
 #if DEBUG 
@@ -77,16 +76,16 @@ int GameMain(int Argc, char *Args[])
     GameLib.LibPath = "../build/macos/libgame.so";
 #else 
     char const * FileName = "libgame.so";
-    size_t PathLen = strlen(BasePath) + strlen(FileName) + 1;
+    size_t PathLen = strlen(ExecutableBasePath) + strlen(FileName) + 1;
     char Result[PathLen];
-    snprintf(Result, PathLen, "%s%s", BasePath, FileName);
+    snprintf(Result, PathLen, "%s%s", ExecutableBasePath, FileName);
     GameLib.LibPath = Result;
 #endif
 #elif defined(PLATFORM_WIN)
     char const * FileName = "libgame.dll";
-    size_t PathLen = strlen(BasePath) + strlen(FileName) + 1;
+    size_t PathLen = strlen(ExecutableBasePath) + strlen(FileName) + 1;
     char Result[PathLen];
-    snprintf(Result, PathLen, "%s%s", BasePath, FileName);
+    snprintf(Result, PathLen, "%s%s", ExecutableBasePath, FileName);
     GameLib.LibPath = Result;
 #endif
     if (LoadGameCode(&GameLib) != 0)
@@ -101,6 +100,7 @@ int GameMain(int Argc, char *Args[])
     game_memory GameMemory = {};
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
+    GameMemory.AssetPath = ExecutableBasePath;
 
 #if DEBUG
     void *BaseAddress = (void *)Terabytes(2);

@@ -48,6 +48,8 @@ struct game_memory
 
     u64 TransientStorageSize;
     void *TransientStorage;
+
+    char const *AssetPath;
 };
 
 typedef void (*GameInit_t)(game_memory *, offscreen_buffer *);
