@@ -71,15 +71,12 @@ int GameMain(int Argc, char *Args[])
     char const *ExecutableBasePath = SDL_GetBasePath();
 
 #if defined(PLATFORM_MACOS)
-#if DEBUG 
-    // TODO: this won't work when distributing the build...
+#if DEBUG
+    // This is hardcoded so we can reload it be recompiling libgame;
+    // outside of debug mode there is no need for reloading it.
     GameLib.LibPath = "../build/macos/libgame.so";
 #else 
-    char const * FileName = "libgame.so";
-    size_t PathLen = strlen(ExecutableBasePath) + strlen(FileName) + 1;
-    char Result[PathLen];
-    snprintf(Result, PathLen, "%s%s", ExecutableBasePath, FileName);
-    GameLib.LibPath = Result;
+    GameLib.LibPath = "libgame.so";
 #endif
 #elif defined(PLATFORM_WIN)
     char const * FileName = "libgame.dll";
