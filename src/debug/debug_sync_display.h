@@ -1,8 +1,6 @@
 #ifndef DEBUG_SYNC_DISPLAY_H
 #define DEBUG_SYNC_DISPLAY_H
 
-// #include "game.h"
-
 #include "../defs.h"
 #include "../types.h"
 

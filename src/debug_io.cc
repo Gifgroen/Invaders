@@ -1,5 +1,6 @@
 #include "debug_io.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
@@ -40,15 +41,15 @@ internal_func debug_read_file_result DebugReadEntireFile(char const *Filename)
     return Result;
 }
 
-// internal_func bool DebugWriteEntireFile(char const *Filename, char const *Content, u64 Length) 
-// {
-//     FILE * File = fopen(Filename, "w");
-//     if (File == NULL) 
-//     {
-//         return false;
-//     }
+internal_func bool DebugWriteEntireFile(char const *Filename, char const *Content, u64 Length) 
+{
+    FILE * File = fopen(Filename, "w");
+    if (File == NULL) 
+    {
+        return false;
+    }
 
-//     u64 Written = fwrite(Content, 1, Length, File);
-//     fclose(File);
-//     return Length == Written;
-// }
+    u64 Written = fwrite(Content, 1, Length, File);
+    fclose(File);
+    return Length == Written;
+}

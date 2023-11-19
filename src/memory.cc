@@ -4,8 +4,7 @@
 
 internal_func void *_PushStruct(memory_journal *Journal, memory_size Size)
 {
-    memory_size NewSize = Journal->Used + Size;
-    Assert(NewSize <= Journal->Size);
+    Assert(Journal->Used + Size <= Journal->Size)
 
     void *Result = Journal->Base + Journal->Used;
     Journal->Used += Size;

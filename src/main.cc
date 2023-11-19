@@ -154,17 +154,21 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
     // Controllers
     OpenInputControllers();
     
+#if DEBUG
     // Ticks per second for this CPU.
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
 
     // Administration to enforce a framerate of GameUpdateHz
     u64 StartCycleCount = __rdtsc();
+#endif
+
     u64 StartTime = SDL_GetPerformanceCounter();
 
 #if DEBUG
     sdl_debug_time_marker DebugTimeMarkers[GameUpdateHz / 2] = {};
-#endif
+
     u64 DebugLastPlayCursorIndex = 0;
+#endif
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
 
@@ -273,8 +277,10 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
 
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 
+#if DEBUG
         // Measure the Game time, ignore SDL Update time.
         u64 EndTime = SDL_GetPerformanceCounter();
+#endif
 
 #if DEBUG
         SDLDebugSyncDisplay(&BackBuffer, ArrayCount(DebugTimeMarkers), DebugTimeMarkers, &SoundOutput, TargetSecondsPerFrame);
@@ -301,7 +307,7 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
         /// 
         /// Profiling
         ///
-
+#if DEBUG
         // Cycles
         u64 EndCycleCount = __rdtsc();
         u64 CycleCount = EndCycleCount - StartCycleCount;
@@ -319,6 +325,7 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
         std::cout << "Time: " << MSPF << "ms/f, FPS: " << FPS << "f/s, Cycles: " << MCPF << "mc/f" << std::endl;
         StartCycleCount = EndCycleCount;
         StartTime = EndTime;
+#endif
     }
 
     DestroyWindow(&WindowState);
