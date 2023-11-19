@@ -5,8 +5,6 @@
 
 struct game_lib
 {
-    char const *BasePath;
-
     char const *LibPath;
     void* LibHandle;
     s64 LastWriteTime;

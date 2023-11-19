@@ -68,8 +68,6 @@ int GameMain(int Argc, char *Args[])
     }
 
     game_lib GameLib = {};
-    char const *ExecutableBasePath = SDL_GetBasePath();
-
 #if defined(PLATFORM_MACOS)
 #if DEBUG
     // This is hardcoded so we can reload it be recompiling libgame;
@@ -97,6 +95,8 @@ int GameMain(int Argc, char *Args[])
     game_memory GameMemory = {};
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
+
+    char const *ExecutableBasePath = SDL_GetBasePath();
     GameMemory.AssetPath = ExecutableBasePath;
 
 #if DEBUG
