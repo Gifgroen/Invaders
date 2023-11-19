@@ -19,7 +19,7 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
 
 internal_func u32 AlphaBlend(u32 Texel, u32 Pixel);
 
-// internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture);
+internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture);
 
 internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color);
 
