@@ -77,11 +77,7 @@ int GameMain(int Argc, char *Args[])
     GameLib.LibPath = "libgame.so";
 #endif
 #elif defined(PLATFORM_WIN)
-    char const * FileName = "libgame.dll";
-    size_t PathLen = strlen(ExecutableBasePath) + strlen(FileName) + 1;
-    char Result[PathLen];
-    snprintf(Result, PathLen, "%s%s", ExecutableBasePath, FileName);
-    GameLib.LibPath = Result;
+    GameLib.LibPath = "libgame.dll";
 #endif
     if (LoadGameCode(&GameLib) != 0)
     {
