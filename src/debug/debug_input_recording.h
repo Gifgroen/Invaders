@@ -1,8 +1,7 @@
 #ifndef DEBUG_INPUT_RECORDING_H
 #define DEBUG_INPUT_RECORDING_H
 
-#include "game.h"
-#include "os_window.h"
+#include "../os_window.h"
 
 enum record_action {
     Idle,

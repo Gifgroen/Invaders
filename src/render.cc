@@ -58,32 +58,6 @@ internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
         | ((u32)(B + 0.5f) << 0);
 }
 
-internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
-{
-    Assert(Origin.x >= 0 && Origin.x < Origin.x + Texture->Size.width);
-    Assert(Origin.y >= 0 && Origin.y < Origin.y + Texture->Size.height);
-
-    u32 TextureWidth = Texture->Size.width;
-    u32 TextureHeight = Texture->Size.height;
-
-    v2i BufferSize = Buffer->Size;
-
-    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.y * BufferSize.width) + (u32)Origin.x;
-    u32 *TexturePixel = (u32*)Texture->Pixels;
-
-    for (int Y = 0; Y < TextureHeight; ++Y) 
-    {
-        for (int X = 0; X < TextureWidth; ++X)
-        {
-            *Pixels = AlphaBlend(*TexturePixel, *Pixels);
-
-            Pixels++;
-            TexturePixel++;
-        }
-        Pixels += BufferSize.width - TextureWidth;
-    }
-}
-
 internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
 {
     v2 Points[4] = {
@@ -174,4 +148,49 @@ internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
 internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
 {
     DrawRectangle(Buffer, System.Origin + Point.x * System.XAxis + Point.y * System.YAxis, V2i(16, 16), Color);
+}
+
+internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
+{
+    Assert(Origin.x >= 0 && Origin.x < Origin.x + Texture->Size.width);
+    Assert(Origin.y >= 0 && Origin.y < Origin.y + Texture->Size.height);
+
+    u32 TextureWidth = Texture->Size.width;
+    u32 TextureHeight = Texture->Size.height;
+
+    v2i BufferSize = Buffer->Size;
+
+    u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.y * BufferSize.width) + (u32)Origin.x;
+    u32 *TexturePixel = (u32*)Texture->Pixels;
+
+    for (int Y = 0; Y < TextureHeight; ++Y)
+    {
+        for (int X = 0; X < TextureWidth; ++X)
+        {
+            *Pixels = AlphaBlend(*TexturePixel, *Pixels);
+
+            Pixels++;
+            TexturePixel++;
+        }
+        Pixels += BufferSize.width - TextureWidth;
+    }
+}
+
+internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u16 Thickness, u32 Color)
+{
+    // TOP
+    v2i HorizontalSize = V2i(Size.width, Thickness);
+    DrawRectangle(Buffer, Origin, HorizontalSize, Color);
+
+    v2i VerticalSize = V2i(Thickness, Size.height - 2*Thickness);
+    // Left
+    DrawRectangle(Buffer, V2(Origin.x, Origin.y + Thickness), VerticalSize, Color);
+
+    // Right
+    v2 RightOrigin = V2(Origin.x + Size.width - Thickness, Origin.y);
+    DrawRectangle(Buffer,  V2(RightOrigin.x, RightOrigin.y + Thickness) , VerticalSize, Color);
+
+    // Bottom
+    v2 BottomOrigin = V2(Origin.x, Origin.y + Size.height - Thickness);
+    DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
 }

@@ -3,9 +3,10 @@
 
 #include "defs.h"
 #include "types.h"
-#include "os_input.h"
 
 #include "assets.h"
+#include "memory.h"
+#include "os_input.h"
 
 struct offscreen_buffer 
 {
@@ -17,6 +18,8 @@ struct game_state
 {
     bool Running;
     real64 DeltaTime;
+
+    memory_journal Journal;
 
     v2 PlayerPosition;
     v2i PlayerSize;
@@ -45,6 +48,8 @@ struct game_memory
 
     u64 TransientStorageSize;
     void *TransientStorage;
+
+    char const *AssetPath;
 };
 
 typedef void (*GameInit_t)(game_memory *, offscreen_buffer *);

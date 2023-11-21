@@ -15,7 +15,7 @@
       "type": "lldb",
       "request": "launch",
       "cwd": "${workspaceFolder}/../build",
-      "program": "${workspaceFolder}/../build/win/main.exe",
+      "program": "${workspaceFolder}/../build/win/invaders.exe",
       "args": [],
       "preLaunchTask": "Compile invaders (Win)"
     },

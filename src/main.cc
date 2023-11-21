@@ -23,10 +23,6 @@
 // TODO: Assert and crash?
 #endif
 
-#include "defs.h"
-#include "types.h"
-#include "game.h"
-
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"
@@ -35,11 +31,8 @@
 #include "os_window.cc"
 
 #if DEBUG
-#include "debug_sync_display.h"
-#include "debug_sync_display.cc"
-
-#include "debug_input_recording.h"
-#include "debug_input_recording.cc"
+#include "debug/debug_sync_display.cc"
+#include "debug/debug_input_recording.cc"
 #endif
 
 internal_func int GetWindowRefreshRate(SDL_Window *Window)
@@ -76,9 +69,15 @@ int GameMain(int Argc, char *Args[])
 
     game_lib GameLib = {};
 #if defined(PLATFORM_MACOS)
+#if DEBUG
+    // This is hardcoded so we can reload it be recompiling libgame;
+    // outside of debug mode there is no need for reloading it.
     GameLib.LibPath = "../build/macos/libgame.so";
+#else 
+    GameLib.LibPath = "libgame.so";
+#endif
 #elif defined(PLATFORM_WIN)
-    GameLib.LibPath = "../build/win/libgame.dll";
+    GameLib.LibPath = "libgame.dll";
 #endif
     if (LoadGameCode(&GameLib) != 0)
     {
@@ -93,15 +92,22 @@ int GameMain(int Argc, char *Args[])
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
 
-debug_input_recording InputRecorder = {};
+    char const *ExecutableBasePath = SDL_GetBasePath();
+    GameMemory.AssetPath = ExecutableBasePath;
+
 #if DEBUG
     void *BaseAddress = (void *)Terabytes(2);
 #else
     void *BaseAddress = (void *)(0);
 #endif
 
-    u64 TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.TransientStorageSize;
+
+#if DEBUG
+    debug_input_recording InputRecorder = {};
     InputRecorder.TotalMemorySize = TotalStorageSize;
+#endif
+
 #if defined(PLATFORM_WIN)
     GameMemory.PermanentStorage = VirtualAlloc(BaseAddress, TotalStorageSize, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
 #elif defined(PLATFORM_MACOS)
@@ -119,7 +125,7 @@ debug_input_recording InputRecorder = {};
         std::cout << "Device capable refresh rate is " << DetectedFrameRate << " Hz, but Game runs in " << GameUpdateHz << " Hz\n";
     }
 
-    game_state *GameState = (game_state *)GameMemory.TransientStorage;
+    game_state *GameState = (game_state *)GameMemory.PermanentStorage;
     GameState->DeltaTime = 1.f / (real32)GameUpdateHz;
 
     sdl_sound_output SoundOutput = {};
@@ -144,15 +150,21 @@ debug_input_recording InputRecorder = {};
     // Controllers
     OpenInputControllers();
     
+#if DEBUG
     // Ticks per second for this CPU.
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
 
     // Administration to enforce a framerate of GameUpdateHz
     u64 StartCycleCount = __rdtsc();
+#endif
+
     u64 StartTime = SDL_GetPerformanceCounter();
 
+#if DEBUG
     sdl_debug_time_marker DebugTimeMarkers[GameUpdateHz / 2] = {};
+
     u64 DebugLastPlayCursorIndex = 0;
+#endif
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
 
@@ -261,8 +273,10 @@ debug_input_recording InputRecorder = {};
 
         TryWaitForNextFrame(StartTime, TargetSecondsPerFrame);
 
+#if DEBUG
         // Measure the Game time, ignore SDL Update time.
         u64 EndTime = SDL_GetPerformanceCounter();
+#endif
 
 #if DEBUG
         SDLDebugSyncDisplay(&BackBuffer, ArrayCount(DebugTimeMarkers), DebugTimeMarkers, &SoundOutput, TargetSecondsPerFrame);
@@ -289,7 +303,7 @@ debug_input_recording InputRecorder = {};
         /// 
         /// Profiling
         ///
-
+#if DEBUG
         // Cycles
         u64 EndCycleCount = __rdtsc();
         u64 CycleCount = EndCycleCount - StartCycleCount;
@@ -307,6 +321,7 @@ debug_input_recording InputRecorder = {};
         std::cout << "Time: " << MSPF << "ms/f, FPS: " << FPS << "f/s, Cycles: " << MCPF << "mc/f" << std::endl;
         StartCycleCount = EndCycleCount;
         StartTime = EndTime;
+#endif
     }
 
     DestroyWindow(&WindowState);

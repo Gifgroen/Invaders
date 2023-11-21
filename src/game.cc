@@ -1,41 +1,79 @@
 #include "game.h"
 
 #include "assets.cc"
+// TODO: get rid of Debug IO and provide a struct with func pointers that offer i/o features.
 #include "debug_io.cc"
 #include "math.cc"
+#include "memory.cc"
 #include "render.cc"
 
 #include <iostream>
 
+global_variable coordinate_system *NewSystem;
+
 void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
-    game_state *GameState = (game_state*)GameMemory->TransientStorage;
+    game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
-    char const *Path1 = "../data/ship.png";
-    loaded_texture Texture1 = LoadTexture(Path1);
+    u8 *Base = (u8 *)GameMemory->PermanentStorage + sizeof(game_state);
+    memory_size TotalSize = GameMemory->PermanentStorageSize - sizeof(game_state);
+    InitialiseJournal(&GameState->Journal, Base, TotalSize);
+
+    std::cout << "Loading assets from guessed relative path; should use assetPath = " << GameMemory->AssetPath << std::endl; 
+
+    memory_size PathLen = strlen(GameMemory->AssetPath);
+
+    char const *Path1 = "ship.png";
+    memory_size Len1 = PathLen + strlen(Path1) + 1;
+    char Ship1Path[Len1];
+    snprintf(Ship1Path, Len1 + 11, "%s../../data/%s", GameMemory->AssetPath, Path1);
+
+    loaded_texture Texture1 = LoadTexture(Ship1Path);
     GameState->Ships[0] = Texture1;
 
-    char const *Path2 = "../data/ship2.png";
-    loaded_texture Texture2 = LoadTexture(Path2);
+    char const *Path2 = "ship2.png";
+    memory_size Len2 = PathLen + strlen(Path2) + 1;
+    char Ship2Path[Len2];
+    snprintf(Ship2Path, Len2 + 11, "%s../../data/%s", GameMemory->AssetPath, Path2);
+    loaded_texture Texture2 = LoadTexture(Ship2Path);
     GameState->Ships[1] = Texture2;
 
-    char const *Path3 = "../data/ship3.png";
-    loaded_texture Texture3 = LoadTexture(Path3);
+    char const *Path3 = "ship3.png";
+    memory_size Len3 = PathLen + strlen(Path3) + 1;
+    char Ship3Path[Len3];
+    snprintf(Ship3Path, Len3 + 11, "%s../../data/%s", GameMemory->AssetPath, Path3);
+    loaded_texture Texture3 = LoadTexture(Ship3Path);
     GameState->Ships[2] = Texture3;   
 
     // Player
-    GameState->PlayerSize = V2i(GameState->Ships[2].Size.width, GameState->Ships[2].Size.height);
+    v2 ShipSize = GameState->Ships[2].Size;
+    GameState->PlayerSize = V2i(ShipSize.width, ShipSize.height);
     GameState->PlayerPosition = V2(0, 0);
 
     GameState->ToneHz = 256;
 
     GameState->Running = true;
-    std::cout << "GameInit: running = " << GameState->Running << std::endl;
+
+    // Memory test
+    NewSystem = PushStruct(&GameState->Journal, coordinate_system);
+    NewSystem->XAxis = V2(1.0f, 0.0f);
+    NewSystem->YAxis = Perp(NewSystem->XAxis);
+    loaded_texture *Texture = &GameState->Ships[0];
+    NewSystem->Texture = Texture;
+
+    v2i ScreenSize = Buffer->Size;
+    NewSystem->Origin = V2(
+        ScreenSize.width - Texture->Size.width - 50.0f, 
+        ScreenSize.height - Texture->Size.height - 50.0f 
+    );
+
+    NewSystem->XAxis *= Texture->Size.width;
+    NewSystem->YAxis *= Texture->Size.height;
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
-    game_state *GameState = (game_state*)GameMemory->TransientStorage;
+    game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
     // GameState->ToneHz = 128;
 
@@ -113,8 +151,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 #if 1
     coordinate_system PlayerSystem = {};
     PlayerSystem.Origin = GameState->PlayerPosition;
-    
-    
+
     PlayerSystem.Texture = &PlayerTexture;
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
@@ -127,6 +164,11 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 #else
     DrawTexture(Buffer, GameState->PlayerPosition, &PlayerTexture);
 #endif
+
+    if (NewSystem) 
+    {
+        FillCoordinateSystem(Buffer, *NewSystem, 0xFF0000FF);
+    }
 
     /** Playing with vectors: drawing a rotating texture. */
     coordinate_system System = {};
@@ -148,13 +190,17 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2 SystemCenterPoint = V2(0.5f, 0.5f);
     DrawPointInCoordinateSystem(Buffer, System, SystemCenterPoint, 0xFF00FFFF);
 
-    /**
-     * Draw a Rectangle aligned with the X and Y Axis
-     */
+    /** Draw a Rectangle aligned with the X and Y Axis */
     u32 GreenColor = 0xFF00FF00;
     v2i GreenSize = V2i(128, 128);
     v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
     DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
+
+    v2 OutlineOrigin = V2(100.0f, 100.0f);
+    v2i OutlineSize = V2i(256, 256);
+    u16 Thickness = 4;
+    u32 OutlineColor = 0xFFFFFFFF;
+    DrawOutline(Buffer, OutlineOrigin, OutlineSize, Thickness, OutlineColor);
 }
 
 void GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameState)
@@ -183,6 +229,6 @@ void GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameStat
 
 void GameGetSoundSamples(game_memory *GameMemory, game_sound_output_buffer *SoundBuffer) 
 {
-    game_state *GameState = (game_state *)GameMemory->TransientStorage;
+    game_state *GameState = (game_state *)GameMemory->PermanentStorage;
     GameOutputSound(SoundBuffer, GameState);
 }
