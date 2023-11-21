@@ -23,25 +23,25 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 
     memory_size PathLen = strlen(GameMemory->AssetPath);
 
-    char const *Path1 = "../../data/ship.png";
+    char const *Path1 = "ship.png";
     memory_size Len1 = PathLen + strlen(Path1) + 1;
     char Ship1Path[Len1];
-    snprintf(Ship1Path, Len1, "%s%s", GameMemory->AssetPath, Path1);
+    snprintf(Ship1Path, Len1 + 11, "%s../../data/%s", GameMemory->AssetPath, Path1);
 
     loaded_texture Texture1 = LoadTexture(Ship1Path);
     GameState->Ships[0] = Texture1;
 
-    char const *Path2 = "../../data/ship2.png";
+    char const *Path2 = "ship2.png";
     memory_size Len2 = PathLen + strlen(Path2) + 1;
     char Ship2Path[Len2];
-    snprintf(Ship2Path, Len2, "%s%s", GameMemory->AssetPath, Path2);
+    snprintf(Ship2Path, Len2 + 11, "%s../../data/%s", GameMemory->AssetPath, Path2);
     loaded_texture Texture2 = LoadTexture(Ship2Path);
     GameState->Ships[1] = Texture2;
 
-    char const *Path3 = "../../data/ship3.png";
+    char const *Path3 = "ship3.png";
     memory_size Len3 = PathLen + strlen(Path3) + 1;
     char Ship3Path[Len3];
-    snprintf(Ship3Path, Len3, "%s%s", GameMemory->AssetPath, Path3);
+    snprintf(Ship3Path, Len3 + 11, "%s../../data/%s", GameMemory->AssetPath, Path3);
     loaded_texture Texture3 = LoadTexture(Ship3Path);
     GameState->Ships[2] = Texture3;   
 
