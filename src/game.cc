@@ -80,6 +80,41 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     u32 Color = 0xFFFF00FF;
     Clear(Buffer, Color);
 
+    real32 Angle = GameState->ElapsedTime;
+
+    v2 Center = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
+    v2i Size = V2i(200, 200);
+
+    // R
+    v2 OriginR = Center - V2((Center.width + Size.width) / 2, 0);
+
+    coordinate_system SystemR = {};
+    SystemR.XAxis = (real32)Size.width * V2(cosf(Angle), sinf(Angle));
+    SystemR.YAxis = Perp(SystemR.XAxis);
+    SystemR.Origin = OriginR - SystemR.XAxis * 0.5f - SystemR.YAxis * 0.5f;
+    SystemR.Texture = &GameState->Ships[1];
+    FillCoordinateSystem(Buffer, SystemR, 0xFFFFFF00);
+
+    // G
+    v2 HalfSize = V2((real32)Size.x * 0.5, (real32)Size.height * 0.5);
+    v2 OriginG = Center;
+
+    coordinate_system SystemG = {};
+    SystemG.XAxis = (real32)Size.width * V2(cosf(Angle), sinf(Angle));
+    SystemG.YAxis = Perp(SystemG.XAxis);
+    SystemG.Origin = OriginG - SystemG.XAxis * 0.5f - SystemG.YAxis * 0.5f;
+    SystemG.Texture = &GameState->Ships[0];
+    FillCoordinateSystem(Buffer, SystemG, 0xFFFFFF00);
+
+    // B
+    v2 OriginB = Center + V2((Center.width + Size.width) * 0.5, 0);
+    coordinate_system SystemB = {};
+    SystemB.XAxis = (real32)Size.width * V2(cosf(Angle), sinf(Angle));
+    SystemB.YAxis = Perp(SystemB.XAxis);
+    SystemB.Origin = OriginB - SystemB.XAxis * 0.5f - SystemB.YAxis * 0.5f;
+    SystemB.Texture = &GameState->Ships[2];
+    FillCoordinateSystem(Buffer, SystemB, 0xFFFFFF00);
+
     game_controller Keyboard = Input->Keyboards[0];
     game_controller Controller = Input->Controllers[0];
 
@@ -155,7 +190,6 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     PlayerSystem.Texture = &PlayerTexture;
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
-
     // Scale both axes of the coordinate_system based on texture size(s).
     PlayerSystem.XAxis *= PlayerTexture.Size.width;
     PlayerSystem.YAxis *= PlayerTexture.Size.height;
@@ -172,13 +206,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     /** Playing with vectors: drawing a rotating texture. */
     coordinate_system System = {};
-
-    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
-    System.Origin = ScreenCenter;
-
-    GameState->ElapsedTime += GameState->DeltaTime;
-
-    real32 Angle = GameState->ElapsedTime;
+    System.Origin = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
     System.XAxis = 200.0f * V2(cosf(Angle), sinf(Angle));
     System.YAxis = Perp(System.XAxis);
 
@@ -186,6 +214,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     FillCoordinateSystem(Buffer, System, 0xFFFFFF00);
 
+    /** Draw basis markers like Origin, X and Y axes, center. */
     DrawCoordinateSystem(Buffer, System);
     v2 SystemCenterPoint = V2(0.5f, 0.5f);
     DrawPointInCoordinateSystem(Buffer, System, SystemCenterPoint, 0xFF00FFFF);
@@ -196,11 +225,14 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2 GreenPos = V2(Buffer->Size.width - GreenSize.width - 100, 100);
     DrawRectangle(Buffer, GreenPos, GreenSize, GreenColor);
 
+    /** Draw a Rectangular outline given a Position and Thickness*/
     v2 OutlineOrigin = V2(100.0f, 100.0f);
     v2i OutlineSize = V2i(256, 256);
     u16 Thickness = 4;
     u32 OutlineColor = 0xFFFFFFFF;
     DrawOutline(Buffer, OutlineOrigin, OutlineSize, Thickness, OutlineColor);
+
+    GameState->ElapsedTime += GameState->DeltaTime;
 }
 
 void GameOutputSound(game_sound_output_buffer *SoundBuffer, game_state *GameState)

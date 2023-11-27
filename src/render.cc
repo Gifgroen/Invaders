@@ -67,9 +67,9 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
         System.Origin + System.YAxis
     };
 
-    real32 xMin = Buffer->Size.width;
+    real32 xMin = Buffer->Size.width - 1;
     real32 xMax = 0;
-    real32 yMin = Buffer->Size.height;
+    real32 yMin = Buffer->Size.height - 1;
     real32 yMax = 0;
     for (int i = 0; i < ArrayCount(Points); ++i)
     {
@@ -117,8 +117,8 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, coordinate_sys
                 Assert( U >= 0.0f && U <= 1.0f );
                 Assert( V >= 0.0f && V <= 1.0f );
 
-                u32 X = (u32)((U * (real32)(System.Texture->Size.width - 3)) + 0.5f);
-                u32 Y = (u32)((V * (real32)(System.Texture->Size.height - 3)) + 0.5f);
+                s32 X = (s32)((U * (real32)(System.Texture->Size.width - 1)) + 0.5f);
+                s32 Y = (s32)((V * (real32)(System.Texture->Size.height - 1)) + 0.5f);
 
                 Assert(X >= 0 && X < System.Texture->Size.width);
                 Assert(Y >= 0 && Y < System.Texture->Size.height);

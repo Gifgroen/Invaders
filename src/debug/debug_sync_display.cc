@@ -42,7 +42,7 @@ internal_func void SDLDebugSyncDisplay(
     real32 PixelsPerByte = (real32)(Width - (2 * PadX)) / (real32)SoundOutput->SecondaryBufferSize;
 
     int Top = PadY;
-    int Bottom = Dimensions.height - PadY;
+    int Bottom = 128 - PadY;
 
     for (int MarkerIndex = 0; MarkerIndex < DebugTimeMarkerCount; ++MarkerIndex)
     {
