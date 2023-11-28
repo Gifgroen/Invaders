@@ -23,7 +23,6 @@
 // TODO: Assert and crash?
 #endif
 
-#include "assets.cc"
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"

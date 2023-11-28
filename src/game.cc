@@ -71,6 +71,7 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
     Clear(Buffer, 0xFFFF00FF);
+    DrawOutline(Buffer, V2(0.0f, 0.0f), Buffer->Size, 8, 0xff00ff00);
 
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
@@ -84,14 +85,16 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     PlayerSystem.Origin = GameState->PlayerPosition;
 
     assets *Assets = GameState->Assets;
+    // Get the asset.
     loaded_texture PlayerTexture = Assets->Ships[2];
     PlayerSystem.Texture = &PlayerTexture;
+    // Determine position, rotation
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
-
+    // and scale
     PlayerSystem.XAxis *= PlayerTexture.Size.width;
     PlayerSystem.YAxis *= PlayerTexture.Size.height;
-
+    // And draw it.
     FillCoordinateSystem(Buffer, PlayerSystem, 0xFFFFFF00);
 
     // Update sim administration

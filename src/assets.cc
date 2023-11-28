@@ -3,7 +3,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
+#if defined(PLATFORM_MACOS)
 #include "debug_io.h"
+#endif
 
 /**
  * LOADING
