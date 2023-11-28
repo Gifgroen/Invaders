@@ -23,15 +23,13 @@ struct game_state
 
     v2 PlayerPosition;
     v2i PlayerSize;
-
     v2 Velocity;
 
     real64 ElapsedTime;
 
     int ToneHz;
 
-    // Assets
-    loaded_texture Ships[3];
+    assets *Assets;
 };
 
 struct game_sound_output_buffer
@@ -48,8 +46,6 @@ struct game_memory
 
     u64 TransientStorageSize;
     void *TransientStorage;
-
-    char const *AssetPath;
 };
 
 typedef void (*GameInit_t)(game_memory *, offscreen_buffer *);

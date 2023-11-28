@@ -23,6 +23,7 @@
 // TODO: Assert and crash?
 #endif
 
+#include "assets.cc"
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"
@@ -91,9 +92,6 @@ int GameMain(int Argc, char *Args[])
     game_memory GameMemory = {};
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
-
-    char const *ExecutableBasePath = SDL_GetBasePath();
-    GameMemory.AssetPath = ExecutableBasePath;
 
 #if DEBUG
     void *BaseAddress = (void *)Terabytes(2);
@@ -165,6 +163,11 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
 
     u64 DebugLastPlayCursorIndex = 0;
 #endif
+
+    char const *ExecutableBasePath = SDL_GetBasePath();
+    assets Assets = {};
+    Assets.BasePath = ExecutableBasePath;
+    GameState->Assets = &Assets;
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
 

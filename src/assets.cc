@@ -5,7 +5,10 @@
 
 #include "debug_io.h"
 
-internal_func loaded_texture LoadTexture(char const *Path) 
+/**
+ * LOADING
+ */
+internal_func loaded_texture LoadTexture(char const *Path)
 {
     int Width, Height, Comp;
 
@@ -44,4 +47,28 @@ internal_func loaded_texture LoadTexture(char const *Path)
 #endif
 
     return Result;
+}
+
+/**
+ * Allocation
+ */
+internal_func loaded_texture CreateTextureAsset(assets *Assets, char const *Path)
+{
+    char const *BasePath = Assets->BasePath;
+    // TODO: Search for assets from . instead of hardcoded steps up and hardcoded data folder
+    local_persist char const *Relative = "../../data/";
+
+    memory_size const PathLength = strlen(BasePath) + strlen(Relative) + strlen(Path) + 1;
+    char ShipPath[PathLength];
+    snprintf(ShipPath, PathLength, "%s%s%s", BasePath, Relative, Path);
+
+    loaded_texture Result = LoadTexture(ShipPath);
+    return Result;
+}
+internal_func void AllocateAssets(assets *Assets)
+{
+    // TODO: better retrieval through Type? or Tag?
+    Assets->Ships[0] = CreateTextureAsset(Assets, "playerShip1_red.png");
+    Assets->Ships[1] = CreateTextureAsset(Assets, "playerShip2_green.png");
+    Assets->Ships[2] = CreateTextureAsset(Assets, "playerShip3_blue.png");
 }
