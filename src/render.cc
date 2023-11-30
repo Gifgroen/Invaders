@@ -1,21 +1,6 @@
 #include "render.h"
 
-#include "math.h"
-
-internal_func void Clear(offscreen_buffer *Buffer, u32 Color) 
-{
-    v2i Size = Buffer->Size;
-    for (u32 Y = 0; Y < Size.height; ++Y)
-    {
-        u32 *Pixel = (u32*)Buffer->Pixels + (Y * Size.width);
-        for (u32 X = 0; X < Size.width; ++X)
-        {
-            *Pixel++ = Color;
-        }
-    }
-}
-
-internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color) 
+internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
 {
     // TODO: properly round Origin.X and Origin.Y.
     u32 Row = (u32)Origin.y * Buffer->Size.width;
@@ -31,6 +16,11 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
         }
         Pixel += Buffer->Size.width - Size.width;
     }
+}
+
+internal_func void Clear(offscreen_buffer *Buffer, u32 Color)
+{
+    DrawRectangle(Buffer, V2(0, 0), Buffer->Size, Color);
 }
 
 internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)

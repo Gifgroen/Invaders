@@ -52,15 +52,17 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
-    assets *Assets = GameState->Assets;
-
     u8 *Base = (u8 *)GameMemory->PermanentStorage + sizeof(game_state);
     memory_size TotalSize = GameMemory->PermanentStorageSize - sizeof(game_state);
     InitialiseJournal(&GameState->Journal, Base, TotalSize);
 
+    assets *Assets = PushStruct(&GameState->Journal, assets);
+    Assets->BasePath = GameMemory->BasePath;
+    GameState->Assets = Assets;
+
     AllocateAssets(Assets);
 
-    // Player
+    // Init Game
     v2 ShipSize = Assets->Ships[2].Size;
     GameState->PlayerSize = V2i(ShipSize.width, ShipSize.height);
     GameState->PlayerPosition = V2(0, 0);
@@ -71,6 +73,7 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
     Clear(Buffer, 0xFFFF00FF);
+
     DrawOutline(Buffer, V2(0.0f, 0.0f), Buffer->Size, 8, 0xff00ff00);
 
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
@@ -80,6 +83,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     /* Simulate a player. */
     SimulatePlayerMovement(GameState, Input, Buffer->Size);
+
     /* Draw the simulated player */
     coordinate_system PlayerSystem = {};
     PlayerSystem.Origin = GameState->PlayerPosition;

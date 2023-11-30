@@ -114,6 +114,8 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
     Assert(GameMemory.PermanentStorage);
     Assert(GameMemory.TransientStorage);
 
+    GameMemory.BasePath = SDL_GetBasePath();
+
     int const GameUpdateHz = 30;
     real32 TargetSecondsPerFrame = 1.0f / (real64)GameUpdateHz;
     int DetectedFrameRate = GetWindowRefreshRate(WindowState.Window);
@@ -162,11 +164,6 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
 
     u64 DebugLastPlayCursorIndex = 0;
 #endif
-
-    char const *ExecutableBasePath = SDL_GetBasePath();
-    assets Assets = {};
-    Assets.BasePath = ExecutableBasePath;
-    GameState->Assets = &Assets;
 
     GameLib.GameInit(&GameMemory, &BackBuffer);
 
@@ -227,14 +224,13 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
             std::cout << "[Info] GameCode has changed, reloading!\n" << std::endl;
             LoadGameCode(&GameLib);
         }
-        
-        // TODO: simulate game
+
         GameLib.GameUpdateAndRender(&GameMemory, &BackBuffer, NewInput);
 
         // REGION: Write Audio to Ringbuffer
 
         SDL_LockAudio();
-        
+
         sdl_audio_buffer_index AudioBufferIndex = PositionAudioBuffer(&SoundOutput, GameUpdateHz);
 
         game_sound_output_buffer SoundBuffer = {};
@@ -330,7 +326,6 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
     DestroyBackBuffer(&BackBuffer);
     return 0;
 }
-
 
 #if defined(PLATFORM_MACOS)
 int main(int Argc, char *Argv[])
