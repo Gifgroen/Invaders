@@ -1,5 +1,7 @@
 #include "render.h"
 
+#include "game.h"
+
 internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
 {
     // TODO: properly round Origin.X and Origin.Y.
@@ -183,4 +185,23 @@ internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u1
     // Bottom
     v2 BottomOrigin = V2(Origin.x, Origin.y + Size.height - Thickness);
     DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
+}
+
+internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
+{
+    for (int ElementIndex = 0; ElementIndex < Group->ElementIndex; ++ElementIndex)
+    {
+        render_element Element = Group->Elements[ElementIndex];
+        switch (Element.Type)
+        {
+            case element_type_Clear:
+            {
+                DrawRectangle(Buffer, V2(0, 0), Buffer->Size, 0xffffff00);
+            } break;
+            default:
+            {
+                Assert(false);
+            };
+        }
+    }
 }

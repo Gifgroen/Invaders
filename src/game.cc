@@ -72,6 +72,20 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
+    // TODO: Push render_element array.
+    // TODO: Push onto Journal.
+    render_group Group = {};
+
+    // TODO: exract to some sort of PushRenderElement(Group, Element);
+    render_element ClearElement = {};
+    ClearElement = {};
+    ClearElement.Type = element_type_Clear;
+    ClearElement.Basis = {};
+
+    Group.Elements[0] = ClearElement;
+    ++Group.ElementIndex;
+
+    // Remove the clear.
     Clear(Buffer, 0xFFFF00FF);
 
     DrawOutline(Buffer, V2(0.0f, 0.0f), Buffer->Size, 8, 0xff00ff00);
@@ -100,6 +114,8 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     PlayerSystem.YAxis *= PlayerTexture.Size.height;
     // And draw it.
     FillCoordinateSystem(Buffer, PlayerSystem, 0xFFFFFF00);
+
+    RenderToOutput(&Group, Buffer);
 
     // Update sim administration
     GameState->ElapsedTime += GameState->DeltaTime;

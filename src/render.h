@@ -13,4 +13,21 @@ struct coordinate_system
     loaded_texture *Texture;
 };
 
+enum render_element_type
+{
+    element_type_Clear
+};
+
+struct render_element
+{
+    render_element_type Type;
+    coordinate_system Basis;
+};
+
+struct render_group
+{
+    u32 ElementIndex;
+    render_element Elements[256];
+};
+
 #endif // RENDER_H
