@@ -67,6 +67,7 @@ internal_func loaded_texture CreateTextureAsset(assets *Assets, char const *Path
     loaded_texture Result = LoadTexture(ShipPath);
     return Result;
 }
+
 internal_func void AllocateAssets(assets *Assets)
 {
     // TODO: better retrieval through Type? or Tag?

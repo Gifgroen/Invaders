@@ -19,33 +19,33 @@ internal_func void RotatingShips(offscreen_buffer *Buffer, v2i ScreenSize, game_
 
     // R
     coordinate_system SystemR = {};
-    SystemR.Texture = &Assets->Ships[0];
+    loaded_texture *RTexture = &Assets->Ships[0];
 
-    v2 OriginR = Center - V2((Center.width + SystemR.Texture->Size.width) * 0.5f, 0);
-    SystemR.XAxis = (real32)SystemR.Texture->Size.width * V2(cosf(Angle), sinf(Angle));
+    v2 OriginR = Center - V2((Center.width + RTexture->Size.width) * 0.5f, 0);
+    SystemR.XAxis = (real32)RTexture->Size.width * V2(cosf(Angle), sinf(Angle));
     SystemR.YAxis = Perp(SystemR.XAxis);
     SystemR.Origin = OriginR - SystemR.XAxis * 0.5f - SystemR.YAxis * 0.5f;
 
-    FillCoordinateSystem(Buffer, SystemR, 0xFFFFFF00);
+    FillCoordinateSystem(Buffer, RTexture, 0xFFFFFF00, SystemR);
 
     // G
     v2 OriginG = Center;
     coordinate_system SystemG = {};
-    SystemG.Texture = &Assets->Ships[1];
-    SystemG.XAxis = (real32)SystemG.Texture->Size.width * V2(cosf(Angle), sinf(Angle));
+    loaded_texture *GTexture = &Assets->Ships[1];
+    SystemG.XAxis = (real32)GTexture->Size.width * V2(cosf(Angle), sinf(Angle));
     SystemG.YAxis = Perp(SystemG.XAxis);
     SystemG.Origin = OriginG - SystemG.XAxis * 0.5f - SystemG.YAxis * 0.5f;
 
-    FillCoordinateSystem(Buffer, SystemG, 0xFFFFFF00);
+    FillCoordinateSystem(Buffer, GTexture, 0xFFFFFF00, SystemG);
 
     // B
     coordinate_system SystemB = {};
-    SystemB.Texture = &Assets->Ships[2];
-    v2 OriginB = Center + V2((Center.width + SystemB.Texture->Size.width) * 0.5f, 0);
-    SystemB.XAxis = (real32)SystemB.Texture->Size.width * V2(cosf(Angle), sinf(Angle));
+    loaded_texture *BTexture = &Assets->Ships[2];
+    v2 OriginB = Center + V2((Center.width + BTexture->Size.width) * 0.5f, 0);
+    SystemB.XAxis = (real32)BTexture->Size.width * V2(cosf(Angle), sinf(Angle));
     SystemB.YAxis = Perp(SystemB.XAxis);
     SystemB.Origin = OriginB - SystemB.XAxis * 0.5f - SystemB.YAxis * 0.5f;
-    FillCoordinateSystem(Buffer, SystemB, 0xFFFFFF00);
+    FillCoordinateSystem(Buffer, BTexture, 0xFFFFFF00, SystemB);
 }
 
 void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
@@ -66,31 +66,23 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     v2 ShipSize = Assets->Ships[2].Size;
     GameState->PlayerSize = V2i(ShipSize.width, ShipSize.height);
     GameState->PlayerPosition = V2(0, 0);
+
     GameState->ToneHz = 256;
     GameState->Running = true;
 }
 
 void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game_input *Input)
 {
-    // TODO: Push render_element array.
-    // TODO: Push onto Journal.
-    render_group Group = {};
-
-    // TODO: exract to some sort of PushRenderElement(Group, Element);
-    render_element ClearElement = {};
-    ClearElement = {};
-    ClearElement.Type = element_type_Clear;
-    ClearElement.Basis = {};
-
-    Group.Elements[0] = ClearElement;
-    ++Group.ElementIndex;
-
-    // Remove the clear.
-    Clear(Buffer, 0xFFFF00FF);
-
-    DrawOutline(Buffer, V2(0.0f, 0.0f), Buffer->Size, 8, 0xff00ff00);
-
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
+
+    assets *Assets = GameState->Assets;
+
+    // TODO: Push render_element array to Journal?
+
+    render_group *Group = PushStruct(&GameState->Journal, render_group);
+
+    PushClearElement(Group, 0xFFFFFF00);
+    PushOutlineElement(Group, V2(0.0f, 0.0f), Buffer->Size, 8, 0xff00ff00);
 
     // Coordinate System (Basis transform) test
     RotatingShips(Buffer, Buffer->Size, GameState);
@@ -100,22 +92,19 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     /* Draw the simulated player */
     coordinate_system PlayerSystem = {};
-    PlayerSystem.Origin = GameState->PlayerPosition;
-
-    assets *Assets = GameState->Assets;
-    // Get the asset.
-    loaded_texture PlayerTexture = Assets->Ships[2];
-    PlayerSystem.Texture = &PlayerTexture;
     // Determine position, rotation
+    PlayerSystem.Origin = GameState->PlayerPosition;
     PlayerSystem.XAxis = V2(1.0f, 0.0f);
     PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
     // and scale
+    loaded_texture PlayerTexture = Assets->Ships[2];
     PlayerSystem.XAxis *= PlayerTexture.Size.width;
     PlayerSystem.YAxis *= PlayerTexture.Size.height;
     // And draw it.
-    FillCoordinateSystem(Buffer, PlayerSystem, 0xFFFFFF00);
+    FillCoordinateSystem(Buffer, &PlayerTexture, 0xFFFFFF00, PlayerSystem);
 
-    RenderToOutput(&Group, Buffer);
+
+    RenderToOutput(Group, Buffer);
 
     // Update sim administration
     GameState->ElapsedTime += GameState->DeltaTime;
