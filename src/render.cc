@@ -3,7 +3,9 @@
 #include "game.h"
 #include "math.h"
 
+///
 /// Drawing
+///
 
 internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
 {
@@ -185,6 +187,10 @@ internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u1
     DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
 }
 
+/// 
+/// Allocation
+/// 
+
 internal_func void PushRenderElement(render_group *Group, render_element Element)
 {
     Assert(Group->ElementIndex + 1 < ArrayCount(Group->Elements));
@@ -193,21 +199,33 @@ internal_func void PushRenderElement(render_group *Group, render_element Element
     Group->Elements[Group->ElementIndex++] = Element;
 }
 
-internal_func void PushClearElement(render_group *Group, u32 Color)
+internal_func void PushClearElement(render_group *Group, v2 Origin, v2i Size, u32 Color)
 {
     render_element Element = {};
     Element.Type = element_type_Clear;
 
-    // Element specific
-    Element.Color = Color;
+    coordinate_system Basis = {};
+    Basis.Origin = Origin;
+    // TODO: Size to Axes...
+    // TODO: This wont rotate
+    Basis.XAxis = V2(1.0f, 0.0f);
+    Basis.YAxis = Perp(Basis.XAxis);
+
+    // Element specific?
+    Basis.XAxis *= Size.width;  // Scale
+    Basis.YAxis *= Size.height; // Scale
+    Element.Basis = Basis;
+
+    rect_spec Spec = {};
+    Spec.Color = Color;
+    Element.ElementSpec = &Spec;
 
     PushRenderElement(Group, Element);
 }
 
-internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, u8 Thickness, u32 Color)
+internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, u16 Thickness, u32 Color)
 {
     render_element Element = {};
-
     Element.Type = element_type_Outline;
 
     coordinate_system Basis = {};
@@ -222,8 +240,10 @@ internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, 
     Basis.YAxis *= Size.height; // Scale
     Element.Basis = Basis;
 
-    Element.Color = Color;
-    Element.Thickness = Thickness;
+    outline_spec Spec = {};
+    Spec.Thickness = Thickness;
+    Spec.Color = Color;
+    Element.ElementSpec = &Spec;
 
     PushRenderElement(Group, Element);
 }
@@ -237,13 +257,18 @@ internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
         {
             case element_type_Clear:
             {
-                DrawRectangle(Buffer, V2(0, 0), Buffer->Size, Element.Color);
+                coordinate_system Basis = Element.Basis;
+                v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
+                rect_spec *Spec = (rect_spec *)Element.ElementSpec;
+                DrawRectangle(Buffer, Basis.Origin, Size, Spec->Color);
             } break;
 
             case element_type_Outline:
             {
                 coordinate_system Basis = Element.Basis;
-                DrawOutline(Buffer, Basis.Origin, V2i(Basis.XAxis.width, Basis.YAxis.height), Element.Thickness, Element.Color);
+                v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
+                outline_spec *Spec = (outline_spec *)Element.ElementSpec;
+                DrawOutline(Buffer, Basis.Origin, Size, Spec->Thickness, Spec->Color);
             } break;
 
             default:

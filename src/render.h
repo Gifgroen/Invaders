@@ -17,14 +17,23 @@ enum render_element_type
     element_type_Outline,
 };
 
+struct rect_spec
+{
+    u32 Color;
+};
+
+struct outline_spec
+{
+    u16 Thickness;
+    u32 Color;
+};
+
 struct render_element
 {
     render_element_type Type;
-    coordinate_system Basis;    // TODO: Texture should be extracted
-    u32 Color;                  // TODO: Color should be extraced
+    coordinate_system Basis;
 
-    // TODO: Split Style and Position from coords and Color, etc
-    u8 Thickness; // This makes no sense for anything other then `render_type_Outline`
+    void *ElementSpec;
 };
 
 struct render_group

@@ -2,9 +2,11 @@
 
 #define PushStruct(Journal, Type) (Type *)_PushStruct(Journal, sizeof(Type))
 
+#define PushSize(Journal, Size) _PushStruct(Journal, (memory_size)Size)
+
 internal_func void *_PushStruct(memory_journal *Journal, memory_size Size)
 {
-    Assert(Journal->Used + Size <= Journal->Size)
+    Assert(Journal->Used + Size <= Journal->Size);
 
     void *Result = Journal->Base + Journal->Used;
     Journal->Used += Size;

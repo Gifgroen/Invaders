@@ -68,7 +68,7 @@ internal_func sdl_audio_buffer_index PositionAudioBuffer(sdl_sound_output *Sound
     {
         SafeWriteCursor += SoundOutput->SecondaryBufferSize;
     }
-    Assert(SafeWriteCursor >= AudioRingBuffer.PlayCursor)
+    Assert(SafeWriteCursor >= AudioRingBuffer.PlayCursor);
     SafeWriteCursor += SoundOutput->SafetyBytes;
 
     bool AudioCardIsLowLatency = SafeWriteCursor < ExpectedFrameBoundaryByte;

@@ -81,28 +81,28 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     render_group *Group = PushStruct(&GameState->Journal, render_group);
 
-    PushClearElement(Group, 0xFFFFFF00);
-    PushOutlineElement(Group, V2(0.0f, 0.0f), Buffer->Size, 8, 0xff00ff00);
+    v2 ScreenOrigin = V2(0.0f, 0.0f);
+    PushClearElement(Group, ScreenOrigin, Buffer->Size, 0xFFFFFF00);
+    // PushOutlineElement(Group, ScreenOrigin, Buffer->Size, 8, 0xff00ff00);
 
-    // Coordinate System (Basis transform) test
-    RotatingShips(Buffer, Buffer->Size, GameState);
+    // // Coordinate System (Basis transform) test
+    // RotatingShips(Buffer, Buffer->Size, GameState);
 
-    /* Simulate a player. */
-    SimulatePlayerMovement(GameState, Input, Buffer->Size);
+    // /* Simulate a player. */
+    // SimulatePlayerMovement(GameState, Input, Buffer->Size);
 
-    /* Draw the simulated player */
-    coordinate_system PlayerSystem = {};
-    // Determine position, rotation
-    PlayerSystem.Origin = GameState->PlayerPosition;
-    PlayerSystem.XAxis = V2(1.0f, 0.0f);
-    PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
-    // and scale
-    loaded_texture PlayerTexture = Assets->Ships[2];
-    PlayerSystem.XAxis *= PlayerTexture.Size.width;
-    PlayerSystem.YAxis *= PlayerTexture.Size.height;
-    // And draw it.
-    FillCoordinateSystem(Buffer, &PlayerTexture, 0xFFFFFF00, PlayerSystem);
-
+    // /* Draw the simulated player */
+    // coordinate_system PlayerSystem = {};
+    // // Determine position, rotation
+    // PlayerSystem.Origin = GameState->PlayerPosition;
+    // PlayerSystem.XAxis = V2(1.0f, 0.0f);
+    // PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
+    // // and scale
+    // loaded_texture PlayerTexture = Assets->Ships[2];
+    // PlayerSystem.XAxis *= PlayerTexture.Size.width;
+    // PlayerSystem.YAxis *= PlayerTexture.Size.height;
+    // // And draw it.
+    // FillCoordinateSystem(Buffer, &PlayerTexture, 0xFFFFFF00, PlayerSystem);
 
     RenderToOutput(Group, Buffer);
 
