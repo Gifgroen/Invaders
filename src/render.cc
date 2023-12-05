@@ -187,23 +187,25 @@ internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u1
     DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
 }
 
-/// 
+///
 /// Allocation
-/// 
+///
 
-internal_func void PushRenderElement(render_group *Group, render_element Element)
+inline void *PushRenderElement(render_group *Group, memory_size Size)
 {
-    Assert(Group->ElementIndex + 1 < ArrayCount(Group->Elements));
-    // Todo: If assert fires we're out of render space;
-    // that should increase the buffer instead of STOP!
-    Group->Elements[Group->ElementIndex++] = Element;
+    void *Result = 0;
+    Assert(Group->ElementsSpaceUsed + Size < Group->ElementsSpaceSize);
+    Result = ((u8 *)Group->ElementsBase) + Group->ElementsSpaceUsed;
+    Group->ElementsSpaceUsed += Size;
+    return Result;
 }
 
 internal_func void PushClearElement(render_group *Group, v2 Origin, v2i Size, u32 Color)
 {
-    render_element Element = {};
-    Element.Type = element_type_Clear;
+    rect_element *Element = (rect_element*)PushRenderElement(Group, sizeof(rect_element));
+    Element->Type = element_type_Clear;
 
+    // TODO: this could be a default value somewhere?
     coordinate_system Basis = {};
     Basis.Origin = Origin;
     // TODO: Size to Axes...
@@ -211,23 +213,19 @@ internal_func void PushClearElement(render_group *Group, v2 Origin, v2i Size, u3
     Basis.XAxis = V2(1.0f, 0.0f);
     Basis.YAxis = Perp(Basis.XAxis);
 
-    // Element specific?
     Basis.XAxis *= Size.width;  // Scale
     Basis.YAxis *= Size.height; // Scale
-    Element.Basis = Basis;
+    Element->Basis = Basis;
 
-    rect_spec Spec = {};
-    Spec.Color = Color;
-    Element.ElementSpec = &Spec;
-
-    PushRenderElement(Group, Element);
+    Element->Color = Color;
 }
 
 internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, u16 Thickness, u32 Color)
 {
-    render_element Element = {};
-    Element.Type = element_type_Outline;
+    outline_element *Element = (outline_element *)PushRenderElement(Group, sizeof(outline_element));
+    Element->Type = element_type_Outline;
 
+    // TODO: this could be a default value somewhere?
     coordinate_system Basis = {};
     Basis.Origin = Origin;
     // TODO: Size to Axes...
@@ -238,37 +236,37 @@ internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, 
     // Element specific
     Basis.XAxis *= Size.width;  // Scale
     Basis.YAxis *= Size.height; // Scale
-    Element.Basis = Basis;
+    Element->Basis = Basis;
 
-    outline_spec Spec = {};
-    Spec.Thickness = Thickness;
-    Spec.Color = Color;
-    Element.ElementSpec = &Spec;
-
-    PushRenderElement(Group, Element);
+    Element->Thickness = Thickness;
+    Element->Color = Color;
 }
 
 internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
 {
-    for (int ElementIndex = 0; ElementIndex < Group->ElementIndex; ++ElementIndex)
+    for (u32 ElementOffset = 0; ElementOffset < Group->ElementsSpaceUsed;)
     {
-        render_element Element = Group->Elements[ElementIndex];
-        switch (Element.Type)
+        render_element_type *Type = (render_element_type *)((u8*)Group->ElementsBase + ElementOffset);
+        switch (*Type)
         {
             case element_type_Clear:
             {
-                coordinate_system Basis = Element.Basis;
+                rect_element *Element = (rect_element *)Type;
+                coordinate_system Basis = Element->Basis;
                 v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
-                rect_spec *Spec = (rect_spec *)Element.ElementSpec;
-                DrawRectangle(Buffer, Basis.Origin, Size, Spec->Color);
+                DrawRectangle(Buffer, Basis.Origin, Size, Element->Color);
+
+                ElementOffset += sizeof(*Element);
             } break;
 
             case element_type_Outline:
             {
-                coordinate_system Basis = Element.Basis;
+                outline_element *Element = (outline_element *)Type;
+                coordinate_system Basis = Element->Basis;
                 v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
-                outline_spec *Spec = (outline_spec *)Element.ElementSpec;
-                DrawOutline(Buffer, Basis.Origin, Size, Spec->Thickness, Spec->Color);
+                DrawOutline(Buffer, Basis.Origin, Size, Element->Thickness, Element->Color);
+
+                ElementOffset += sizeof(*Element);
             } break;
 
             default:

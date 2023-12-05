@@ -13,33 +13,31 @@ struct coordinate_system
 
 enum render_element_type
 {
-    element_type_Clear,
-    element_type_Outline,
+    element_type_Clear = 1,
+    element_type_Outline = 2,
 };
 
-struct rect_spec
+struct rect_element
 {
+    render_element_type Type;
+    coordinate_system Basis;
     u32 Color;
 };
 
-struct outline_spec
+struct outline_element
 {
+    render_element_type Type;
+
+    coordinate_system Basis;
     u16 Thickness;
     u32 Color;
 };
 
-struct render_element
-{
-    render_element_type Type;
-    coordinate_system Basis;
-
-    void *ElementSpec;
-};
-
 struct render_group
 {
-    u32 ElementIndex;
-    render_element Elements[256];
+    u32 ElementsSpaceSize;
+    u32 ElementsSpaceUsed;
+    void *ElementsBase;
 };
 
 #endif // RENDER_H

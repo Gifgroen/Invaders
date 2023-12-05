@@ -75,15 +75,17 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 {
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
-    assets *Assets = GameState->Assets;
+    // assets *Assets = GameState->Assets;
 
     // TODO: Push render_element array to Journal?
 
     render_group *Group = PushStruct(&GameState->Journal, render_group);
+    Group->ElementsSpaceSize = Megabytes(8);
+    Group->ElementsBase = PushSize(&GameState->Journal, Group->ElementsSpaceSize);
 
     v2 ScreenOrigin = V2(0.0f, 0.0f);
     PushClearElement(Group, ScreenOrigin, Buffer->Size, 0xFFFFFF00);
-    // PushOutlineElement(Group, ScreenOrigin, Buffer->Size, 8, 0xff00ff00);
+    PushOutlineElement(Group, ScreenOrigin, Buffer->Size, 8, 0xff00ff00);
 
     // // Coordinate System (Basis transform) test
     // RotatingShips(Buffer, Buffer->Size, GameState);
@@ -105,6 +107,12 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     // FillCoordinateSystem(Buffer, &PlayerTexture, 0xFFFFFF00, PlayerSystem);
 
     RenderToOutput(Group, Buffer);
+
+    // TODO: release the render_group memory properly
+    GameState->Journal.Used -= Group->ElementsSpaceSize;
+    Group->ElementsSpaceUsed = 0;
+    GameState->Journal.Used -= sizeof(*Group);
+    Group = NULL;
 
     // Update sim administration
     GameState->ElapsedTime += GameState->DeltaTime;

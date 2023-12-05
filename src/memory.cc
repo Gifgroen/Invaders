@@ -1,8 +1,8 @@
 #include "memory.h"
 
 #define PushStruct(Journal, Type) (Type *)_PushStruct(Journal, sizeof(Type))
-
-#define PushSize(Journal, Size) _PushStruct(Journal, (memory_size)Size)
+#define PushArray(Journal, Type, Size) (Type *)_PushStruct(Journal, Size * sizeof(Type))
+#define PushSize(Journal, Size) _PushStruct(Journal, Size)
 
 internal_func void *_PushStruct(memory_journal *Journal, memory_size Size)
 {
