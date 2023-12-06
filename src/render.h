@@ -14,11 +14,12 @@ struct coordinate_system
 enum render_element_type
 {
     element_type_Clear,
+    element_type_Rectangle,
     element_type_Outline,
-    element_type_Texture
+    element_type_Texture,
 };
 
-struct rect_element
+struct rectangle_element
 {
     render_element_type Type;
 

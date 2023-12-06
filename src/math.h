@@ -1,6 +1,8 @@
 #ifndef MATH_H
 #define MATH_H
 
+#include <math.h>
+
 #include "types.h"
 
 inline real64 Square(real64 Factor);

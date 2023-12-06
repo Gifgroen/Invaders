@@ -48,9 +48,12 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     loaded_texture PlayerTexture = Assets->Ships[2];
     PushTextureElement(Group, &PlayerTexture, V2(0.0f, 0.0f), GameState->PlayerPosition);
 
-    /* Draw some sample Textures in CenterY of screen on a nice line. */
-    real32 Rotation = GameState->ElapsedTime;
     v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
+    real32 Rotation = GameState->ElapsedTime;
+
+    PushRectElement(Group, V2(0.5f, 0.5f), ScreenCenter, V2i(256, 256), 0xff0000ff, -Rotation);
+
+    /* Draw some sample Textures in CenterY of screen on a nice line. */
     // Left Red Ship
     loaded_texture *RTexture = &Assets->Ships[0];
     v2 OriginR = ScreenCenter - V2((ScreenCenter.width + (real32)RTexture->Size.width) * 0.5f, 0);
@@ -64,9 +67,6 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 
     // TODO: the Draw call for Outline do not support rotation yet
     // PushOutlineElement(Group, V2(100.0f, 100.0), V2i(50, 50), 4, 0xff0000ff, Rotation);
-
-    // TODO: create PushRectElement and support rotation for it.
-    // PushRectElement(Group, V2(100.0f, 100.0), V2i(50, 50), 0xff0000ff, Rotation);
 
     RenderToOutput(Group, Buffer);
 

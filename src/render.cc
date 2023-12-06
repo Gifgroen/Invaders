@@ -32,7 +32,7 @@ internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
         | ((u32)(B + 0.5f) << 0);
 }
 
-internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
+internal_func void DrawClear(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
 {
     // TODO: properly round Origin.X and Origin.Y.
     u32 Row = (u32)Origin.y * Buffer->Size.width;
@@ -50,23 +50,79 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, 
     }
 }
 
+internal_func void DrawRectangle(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
+{
+v2 Points[4] = {
+        System.Origin,
+        System.Origin + System.XAxis,
+        System.Origin + System.XAxis + System.YAxis,
+        System.Origin + System.YAxis
+    };
+
+    real32 xMin = Buffer->Size.width - 1;
+    real32 xMax = 0;
+    real32 yMin = Buffer->Size.height - 1;
+    real32 yMax = 0;
+    for (int i = 0; i < ArrayCount(Points); ++i)
+    {
+        v2 Point = Points[i];
+        if (Point.x < xMin)
+        {
+            xMin = Point.x;
+        }
+        if (Point.x > xMax)
+        {
+            xMax = Point.x;
+        }
+        if (Point.y < yMin)
+        {
+            yMin = Point.y;
+        }
+        if (Point.y > yMax)
+        {
+            yMax = Point.y;
+        }
+    }
+
+    for (u32 Y = yMin; Y < yMax; ++Y)
+    {
+        for(u32 X = xMin; X < xMax; ++X)
+        {
+            u32 *Pixel = (u32*)Buffer->Pixels + Y * Buffer->Size.width + X;
+
+            // TODO: this can/should be optimised!
+            v2 Point = V2(X, Y);
+            v2 d = Point - System.Origin;
+            int Edge0 = Dot(d, -Perp(System.XAxis));
+            int Edge1 = Dot(d - System.XAxis, -Perp(System.YAxis));
+            int Edge2 = Dot(d - System.XAxis - System.YAxis, Perp(System.XAxis));
+            int Edge3 = Dot(d - System.YAxis, Perp(System.YAxis));
+
+            if (Edge0 < 0 && Edge1 < 0 && Edge2 < 0 && Edge3 < 0) 
+            {
+                *Pixel = Color;
+            }
+        }
+    }
+}
+
 internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u16 Thickness, u32 Color)
 {
     // TOP
     v2i HorizontalSize = V2i(Size.width, Thickness);
-    DrawRectangle(Buffer, Origin, HorizontalSize, Color);
+    DrawClear(Buffer, Origin, HorizontalSize, Color);
 
     v2i VerticalSize = V2i(Thickness, Size.height - 2*Thickness);
     // Left
-    DrawRectangle(Buffer, V2(Origin.x, Origin.y + Thickness), VerticalSize, Color);
+    DrawClear(Buffer, V2(Origin.x, Origin.y + Thickness), VerticalSize, Color);
 
     // Right
     v2 RightOrigin = V2(Origin.x + Size.width - Thickness, Origin.y);
-    DrawRectangle(Buffer,  V2(RightOrigin.x, RightOrigin.y + Thickness) , VerticalSize, Color);
+    DrawClear(Buffer,  V2(RightOrigin.x, RightOrigin.y + Thickness) , VerticalSize, Color);
 
     // Bottom
     v2 BottomOrigin = V2(Origin.x, Origin.y + Size.height - Thickness);
-    DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
+    DrawClear(Buffer, BottomOrigin, HorizontalSize, Color);
 }
 
 internal_func void DrawTexture(offscreen_buffer *Buffer, coordinate_system System, loaded_texture *Texture, u32 Color = 0xff0000ff)
@@ -160,7 +216,7 @@ inline void *PushRenderElement(render_group *Group, memory_size Size)
 
 internal_func void PushClearElement(render_group *Group, v2 Origin, v2i Size, u32 Color)
 {
-    rect_element *Element = (rect_element*)PushRenderElement(Group, sizeof(rect_element));
+    rectangle_element *Element = (rectangle_element*)PushRenderElement(Group, sizeof(rectangle_element));
     Element->Type = element_type_Clear;
 
     // TODO: this could be a default value somewhere?
@@ -173,6 +229,26 @@ internal_func void PushClearElement(render_group *Group, v2 Origin, v2i Size, u3
 
     Basis.XAxis *= Size.width;  // Scale
     Basis.YAxis *= Size.height; // Scale
+    Element->Basis = Basis;
+
+    Element->Color = Color;
+}
+
+internal_func void PushRectElement(render_group *Group, v2 Align, v2 Origin, v2i Size, u32 Color, real32 Rotation = 0.0f)
+{
+    rectangle_element *Element = (rectangle_element*)PushRenderElement(Group, sizeof(rectangle_element));
+    Element->Type = element_type_Rectangle;
+
+        // TODO: this could be a default value somewhere?
+    coordinate_system Basis = {};
+    // Include Rotation
+    Basis.XAxis = V2(cosf(Rotation), sinf(Rotation));
+    Basis.YAxis = Perp(Basis.XAxis);
+    // Include Position and Scale
+    Basis.XAxis *= (real32)Size.width;
+    Basis.YAxis *= (real32)Size.height;
+    Basis.Origin = Origin - Basis.XAxis * Align.x - Basis.YAxis * Align.y; // TODO: figure out and extract hardcoded center align
+
     Element->Basis = Basis;
 
     Element->Color = Color;
@@ -228,11 +304,17 @@ internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
         {
             case element_type_Clear:
             {
-                rect_element *Element = (rect_element *)Type;
-                coordinate_system Basis = Element->Basis;
-                v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
+                rectangle_element *Element = (rectangle_element *)Type;
+                v2i Size = V2i(Element->Basis.XAxis.width, Element->Basis.YAxis.height);
+                DrawClear(Buffer, Element->Basis.Origin, Size, Element->Color);
 
-                DrawRectangle(Buffer, Basis.Origin, Size, Element->Color);
+                ElementOffset += sizeof(*Element);
+            } break;
+
+            case element_type_Rectangle:
+            {
+                rectangle_element *Element = (rectangle_element *)Type;
+                DrawRectangle(Buffer, Element->Basis, Element->Color);
 
                 ElementOffset += sizeof(*Element);
             } break;
@@ -250,8 +332,7 @@ internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
             case element_type_Texture:
             {
                 texture_element *Element = (texture_element *)Type;
-                coordinate_system Basis = Element->Basis;
-                DrawTexture(Buffer, Basis, Element->Texture);
+                DrawTexture(Buffer, Element->Basis, Element->Texture);
 
                 ElementOffset += sizeof(*Element);
             } break;
