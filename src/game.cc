@@ -8,46 +8,6 @@
 #include "player_movement.cc"
 #include "render.cc"
 
-/* Sample test */
-internal_func void RotatingShips(offscreen_buffer *Buffer, v2i ScreenSize, game_state *GameState)
-{
-    real32 Angle = GameState->ElapsedTime;
-
-    assets *Assets = GameState->Assets;
-
-    v2 Center = V2((real32)ScreenSize.width * 0.5f, (real32)ScreenSize.height * 0.5f);
-
-    // R
-    coordinate_system SystemR = {};
-    loaded_texture *RTexture = &Assets->Ships[0];
-
-    v2 OriginR = Center - V2((Center.width + RTexture->Size.width) * 0.5f, 0);
-    SystemR.XAxis = (real32)RTexture->Size.width * V2(cosf(Angle), sinf(Angle));
-    SystemR.YAxis = Perp(SystemR.XAxis);
-    SystemR.Origin = OriginR - SystemR.XAxis * 0.5f - SystemR.YAxis * 0.5f;
-
-    FillCoordinateSystem(Buffer, RTexture, 0xFFFFFF00, SystemR);
-
-    // G
-    v2 OriginG = Center;
-    coordinate_system SystemG = {};
-    loaded_texture *GTexture = &Assets->Ships[1];
-    SystemG.XAxis = (real32)GTexture->Size.width * V2(cosf(Angle), sinf(Angle));
-    SystemG.YAxis = Perp(SystemG.XAxis);
-    SystemG.Origin = OriginG - SystemG.XAxis * 0.5f - SystemG.YAxis * 0.5f;
-
-    FillCoordinateSystem(Buffer, GTexture, 0xFFFFFF00, SystemG);
-
-    // B
-    coordinate_system SystemB = {};
-    loaded_texture *BTexture = &Assets->Ships[2];
-    v2 OriginB = Center + V2((Center.width + BTexture->Size.width) * 0.5f, 0);
-    SystemB.XAxis = (real32)BTexture->Size.width * V2(cosf(Angle), sinf(Angle));
-    SystemB.YAxis = Perp(SystemB.XAxis);
-    SystemB.Origin = OriginB - SystemB.XAxis * 0.5f - SystemB.YAxis * 0.5f;
-    FillCoordinateSystem(Buffer, BTexture, 0xFFFFFF00, SystemB);
-}
-
 void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 {
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
@@ -62,7 +22,6 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
 
     AllocateAssets(Assets);
 
-    // Init Game
     v2 ShipSize = Assets->Ships[2].Size;
     GameState->PlayerSize = V2i(ShipSize.width, ShipSize.height);
     GameState->PlayerPosition = V2(0, 0);
@@ -75,36 +34,41 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
 {
     game_state *GameState = (game_state*)GameMemory->PermanentStorage;
 
-    // assets *Assets = GameState->Assets;
-
-    // TODO: Push render_element array to Journal?
+    assets *Assets = GameState->Assets;
 
     render_group *Group = PushStruct(&GameState->Journal, render_group);
     Group->ElementsSpaceSize = Megabytes(8);
-    Group->ElementsBase = PushSize(&GameState->Journal, Group->ElementsSpaceSize);
+    Group->ElementsBase = (u8 *)PushSize(&GameState->Journal, Group->ElementsSpaceSize);
 
     v2 ScreenOrigin = V2(0.0f, 0.0f);
     PushClearElement(Group, ScreenOrigin, Buffer->Size, 0xFFFFFF00);
     PushOutlineElement(Group, ScreenOrigin, Buffer->Size, 8, 0xff00ff00);
 
-    // // Coordinate System (Basis transform) test
-    // RotatingShips(Buffer, Buffer->Size, GameState);
+    /* Simulate a player. */
+    SimulatePlayerMovement(GameState, Input, Buffer->Size);
+    /* Draw the simulated player */
+    loaded_texture PlayerTexture = Assets->Ships[2];
+    PushTextureElement(Group, &PlayerTexture, V2(0.0f, 0.0f), GameState->PlayerPosition);
 
-    // /* Simulate a player. */
-    // SimulatePlayerMovement(GameState, Input, Buffer->Size);
+    /* Draw some sample Textures in CenterY of screen on a nice line. */
+    real32 Rotation = GameState->ElapsedTime;
+    v2 ScreenCenter = V2((real32)Buffer->Size.width * 0.5f, (real32)Buffer->Size.height * 0.5f);
+    // Left Red Ship
+    loaded_texture *RTexture = &Assets->Ships[0];
+    v2 OriginR = ScreenCenter - V2((ScreenCenter.width + (real32)RTexture->Size.width) * 0.5f, 0);
+    PushTextureElement(Group, RTexture, V2(0.5f, 0.5f), OriginR,  Rotation);
+    // Middle Green Ship
+    PushTextureElement(Group, &Assets->Ships[1], V2(0.5f, 0.5f), ScreenCenter, Rotation);
+    // Right Blue Ship
+    loaded_texture *BTexture = &Assets->Ships[2];
+    v2 OriginB = ScreenCenter + V2((ScreenCenter.width + (real32)BTexture->Size.width) * 0.5f, 0);
+    PushTextureElement(Group, BTexture, V2(0.5f, 0.5f), OriginB, Rotation);
 
-    // /* Draw the simulated player */
-    // coordinate_system PlayerSystem = {};
-    // // Determine position, rotation
-    // PlayerSystem.Origin = GameState->PlayerPosition;
-    // PlayerSystem.XAxis = V2(1.0f, 0.0f);
-    // PlayerSystem.YAxis = Perp(PlayerSystem.XAxis);
-    // // and scale
-    // loaded_texture PlayerTexture = Assets->Ships[2];
-    // PlayerSystem.XAxis *= PlayerTexture.Size.width;
-    // PlayerSystem.YAxis *= PlayerTexture.Size.height;
-    // // And draw it.
-    // FillCoordinateSystem(Buffer, &PlayerTexture, 0xFFFFFF00, PlayerSystem);
+    // TODO: the Draw call for Outline do not support rotation yet
+    // PushOutlineElement(Group, V2(100.0f, 100.0), V2i(50, 50), 4, 0xff0000ff, Rotation);
+
+    // TODO: create PushRectElement and support rotation for it.
+    // PushRectElement(Group, V2(100.0f, 100.0), V2i(50, 50), 0xff0000ff, Rotation);
 
     RenderToOutput(Group, Buffer);
 

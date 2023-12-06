@@ -7,24 +7,6 @@
 /// Drawing
 ///
 
-internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
-{
-    // TODO: properly round Origin.X and Origin.Y.
-    u32 Row = (u32)Origin.y * Buffer->Size.width;
-    u32 Column = (u32)Origin.x;
-
-    u32 *Pixel = (u32 *)Buffer->Pixels + Row + Column;
-
-    for (u32 Y = 0; Y < Size.height; ++Y)
-    {
-        for (u32 X = 0; X < Size.width; ++X)
-        {
-            *Pixel++ = Color;
-        }
-        Pixel += Buffer->Size.width - Size.width;
-    }
-}
-
 internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
 {
     real32 SA = (real32)((Texel >> 24) & 0xFF);
@@ -50,7 +32,44 @@ internal_func u32 AlphaBlend(u32 Texel, u32 Pixel)
         | ((u32)(B + 0.5f) << 0);
 }
 
-internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, loaded_texture *Texture, u32 Color, coordinate_system System)
+internal_func void DrawRectangle(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 Color)
+{
+    // TODO: properly round Origin.X and Origin.Y.
+    u32 Row = (u32)Origin.y * Buffer->Size.width;
+    u32 Column = (u32)Origin.x;
+
+    u32 *Pixel = (u32 *)Buffer->Pixels + Row + Column;
+
+    for (u32 Y = 0; Y < Size.height; ++Y)
+    {
+        for (u32 X = 0; X < Size.width; ++X)
+        {
+            *Pixel++ = Color;
+        }
+        Pixel += Buffer->Size.width - Size.width;
+    }
+}
+
+internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u16 Thickness, u32 Color)
+{
+    // TOP
+    v2i HorizontalSize = V2i(Size.width, Thickness);
+    DrawRectangle(Buffer, Origin, HorizontalSize, Color);
+
+    v2i VerticalSize = V2i(Thickness, Size.height - 2*Thickness);
+    // Left
+    DrawRectangle(Buffer, V2(Origin.x, Origin.y + Thickness), VerticalSize, Color);
+
+    // Right
+    v2 RightOrigin = V2(Origin.x + Size.width - Thickness, Origin.y);
+    DrawRectangle(Buffer,  V2(RightOrigin.x, RightOrigin.y + Thickness) , VerticalSize, Color);
+
+    // Bottom
+    v2 BottomOrigin = V2(Origin.x, Origin.y + Size.height - Thickness);
+    DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
+}
+
+internal_func void DrawTexture(offscreen_buffer *Buffer, coordinate_system System, loaded_texture *Texture, u32 Color = 0xff0000ff)
 {
     v2 Points[4] = {
         System.Origin,
@@ -92,6 +111,7 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, loaded_texture
         for(u32 X = xMin; X < xMax; ++X)
         {
             u32 *Pixel = (u32*)Buffer->Pixels + Y * Buffer->Size.width + X;
+
 #if 1
     // TODO: this can/should be optimised!
             v2 Point = V2(X, Y);
@@ -118,73 +138,11 @@ internal_func void FillCoordinateSystem(offscreen_buffer *Buffer, loaded_texture
                 u32 *Texel = (u32*)Texture->Pixels + (u32)(Y * Texture->Size.width) + X;
                 *Pixel = AlphaBlend(*Texel, *Pixel);
             }
-#else 
+#else
             *Pixel = Color;
 #endif
         }
     }
-}
-
-// internal_func void DrawCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System)
-// {
-//     v2i AxisSize = V2i(8, 8);
-//     // Origin
-//     DrawRectangle(Buffer, System.Origin, AxisSize, 0x00000000);
-
-//     // X Axis
-//     DrawRectangle(Buffer, System.Origin + System.XAxis, AxisSize, 0xFF0000FF);
-//     // Y Axis
-//     DrawRectangle(Buffer, System.Origin + System.YAxis, AxisSize, 0xFF0000FF);
-// }
-
-// internal_func void DrawPointInCoordinateSystem(offscreen_buffer *Buffer, coordinate_system System, v2 Point, u32 Color)
-// {
-//     DrawRectangle(Buffer, System.Origin + Point.x * System.XAxis + Point.y * System.YAxis, V2i(16, 16), Color);
-// }
-
-// internal_func void DrawTexture(offscreen_buffer *Buffer, v2 Origin, loaded_texture *Texture)
-// {
-//     Assert(Origin.x >= 0 && Origin.x < Origin.x + Texture->Size.width);
-//     Assert(Origin.y >= 0 && Origin.y < Origin.y + Texture->Size.height);
-
-//     u32 TextureWidth = Texture->Size.width;
-//     u32 TextureHeight = Texture->Size.height;
-
-//     v2i BufferSize = Buffer->Size;
-
-//     u32 *Pixels = (u32 *)Buffer->Pixels + ((u32)Origin.y * BufferSize.width) + (u32)Origin.x;
-//     u32 *TexturePixel = (u32*)Texture->Pixels;
-
-//     for (int Y = 0; Y < TextureHeight; ++Y)
-//     {
-//         for (int X = 0; X < TextureWidth; ++X)
-//         {
-//             *Pixels = AlphaBlend(*TexturePixel, *Pixels);
-
-//             Pixels++;
-//             TexturePixel++;
-//         }
-//         Pixels += BufferSize.width - TextureWidth;
-//     }
-// }
-
-internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u16 Thickness, u32 Color)
-{
-    // TOP
-    v2i HorizontalSize = V2i(Size.width, Thickness);
-    DrawRectangle(Buffer, Origin, HorizontalSize, Color);
-
-    v2i VerticalSize = V2i(Thickness, Size.height - 2*Thickness);
-    // Left
-    DrawRectangle(Buffer, V2(Origin.x, Origin.y + Thickness), VerticalSize, Color);
-
-    // Right
-    v2 RightOrigin = V2(Origin.x + Size.width - Thickness, Origin.y);
-    DrawRectangle(Buffer,  V2(RightOrigin.x, RightOrigin.y + Thickness) , VerticalSize, Color);
-
-    // Bottom
-    v2 BottomOrigin = V2(Origin.x, Origin.y + Size.height - Thickness);
-    DrawRectangle(Buffer, BottomOrigin, HorizontalSize, Color);
 }
 
 ///
@@ -220,26 +178,45 @@ internal_func void PushClearElement(render_group *Group, v2 Origin, v2i Size, u3
     Element->Color = Color;
 }
 
-internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, u16 Thickness, u32 Color)
+internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, u16 Thickness, u32 Color, real32 Rotation = 0.0f)
 {
     outline_element *Element = (outline_element *)PushRenderElement(Group, sizeof(outline_element));
     Element->Type = element_type_Outline;
 
     // TODO: this could be a default value somewhere?
     coordinate_system Basis = {};
-    Basis.Origin = Origin;
-    // TODO: Size to Axes...
-    // TODO: This wont rotate
-    Basis.XAxis = V2(1.0f, 0.0f);
+    // Include Rotation
+    Basis.XAxis = V2(cosf(Rotation), sinf(Rotation));
     Basis.YAxis = Perp(Basis.XAxis);
+    // Include Position and Scale
+    Basis.XAxis *= (real32)Size.width;
+    Basis.YAxis *= (real32)Size.height;
+    Basis.Origin = Origin;// - Basis.XAxis * 0.5f - Basis.YAxis * 0.5f; // TODO: extract hardcoded center align
 
-    // Element specific
-    Basis.XAxis *= Size.width;  // Scale
-    Basis.YAxis *= Size.height; // Scale
     Element->Basis = Basis;
 
     Element->Thickness = Thickness;
     Element->Color = Color;
+}
+
+internal_func void PushTextureElement(render_group *Group, loaded_texture *Texture, v2 Align, v2 Origin, real32 Rotation = 0.0f)
+{
+    texture_element *Element = (texture_element *)PushRenderElement(Group, sizeof(texture_element));
+    Element->Type = element_type_Texture;
+
+    // TODO: this could be a default value somewhere?
+    coordinate_system Basis = {};
+    // Include Rotation
+    Basis.XAxis = V2(cosf(Rotation), sinf(Rotation));
+    Basis.YAxis = Perp(Basis.XAxis);
+    // Include Position and Scale
+    Basis.XAxis *= (real32)Texture->Size.width;
+    Basis.YAxis *= (real32)Texture->Size.height;
+    Basis.Origin = Origin - Basis.XAxis * Align.x - Basis.YAxis * Align.y; // TODO: figure out and extract hardcoded center align
+
+    Element->Basis = Basis;
+
+    Element->Texture = Texture;
 }
 
 internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
@@ -254,6 +231,7 @@ internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
                 rect_element *Element = (rect_element *)Type;
                 coordinate_system Basis = Element->Basis;
                 v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
+
                 DrawRectangle(Buffer, Basis.Origin, Size, Element->Color);
 
                 ElementOffset += sizeof(*Element);
@@ -269,10 +247,19 @@ internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
                 ElementOffset += sizeof(*Element);
             } break;
 
+            case element_type_Texture:
+            {
+                texture_element *Element = (texture_element *)Type;
+                coordinate_system Basis = Element->Basis;
+                DrawTexture(Buffer, Basis, Element->Texture);
+
+                ElementOffset += sizeof(*Element);
+            } break;
+
             default:
             {
-                Assert(false);
-            };
+                Assert(!"Invalid");
+            } break;
         }
     }
 }

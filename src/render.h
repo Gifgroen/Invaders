@@ -13,13 +13,15 @@ struct coordinate_system
 
 enum render_element_type
 {
-    element_type_Clear = 1,
-    element_type_Outline = 2,
+    element_type_Clear,
+    element_type_Outline,
+    element_type_Texture
 };
 
 struct rect_element
 {
     render_element_type Type;
+
     coordinate_system Basis;
     u32 Color;
 };
@@ -33,11 +35,19 @@ struct outline_element
     u32 Color;
 };
 
+struct texture_element
+{
+    render_element_type Type;
+
+    coordinate_system Basis;
+    loaded_texture *Texture;
+};
+
 struct render_group
 {
     u32 ElementsSpaceSize;
     u32 ElementsSpaceUsed;
-    void *ElementsBase;
+    u8 *ElementsBase;
 };
 
 #endif // RENDER_H
