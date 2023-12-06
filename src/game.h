@@ -7,6 +7,7 @@
 #include "assets.h"
 #include "memory.h"
 #include "os_input.h"
+#include "debug_io.h"
 
 struct offscreen_buffer 
 {
@@ -39,6 +40,10 @@ struct game_sound_output_buffer
     s16 *Samples;
 };
 
+typedef void (*DebugFreeFileMemory_t)(void *);
+typedef debug_read_file_result (*DebugReadEntireFile_t)(char const *);
+typedef bool (*DebugWriteEntireFile_t)(char const *, char const *, u64);
+
 struct game_memory
 {
     u64 PermanentStorageSize;
@@ -46,6 +51,10 @@ struct game_memory
 
     u64 TransientStorageSize;
     void *TransientStorage;
+
+    DebugFreeFileMemory_t FreeFileMemory;
+    DebugReadEntireFile_t ReadEntireFile;
+    DebugWriteEntireFile_t WriteEntireFile;
 
     char const *BasePath;
 };

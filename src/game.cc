@@ -1,8 +1,6 @@
 #include "game.h"
 
 #include "assets.cc"
-// TODO: get rid of Debug IO and provide a struct with func pointers that offer i/o features.
-#include "debug_io.cc"
 #include "math.cc"
 #include "memory.cc"
 #include "player_movement.cc"
@@ -20,7 +18,7 @@ void GameInit(game_memory *GameMemory, offscreen_buffer *Buffer)
     Assets->BasePath = GameMemory->BasePath;
     GameState->Assets = Assets;
 
-    AllocateAssets(Assets);
+    AllocateAssets(GameMemory, Assets);
 
     v2 ShipSize = Assets->Ships[2].Size;
     GameState->PlayerSize = V2i(ShipSize.width, ShipSize.height);

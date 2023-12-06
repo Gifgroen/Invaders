@@ -23,6 +23,8 @@
 // TODO: Assert and crash?
 #endif
 
+#include "debug_io.cc"
+
 #include "framerate.cc"
 #include "gamelib.cc"
 #include "math.cc"
@@ -91,6 +93,9 @@ int GameMain(int Argc, char *Args[])
     game_memory GameMemory = {};
     GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
+    GameMemory.FreeFileMemory = &DebugFreeFileMemory;
+    GameMemory.ReadEntireFile = &DebugReadEntireFile;
+    GameMemory.WriteEntireFile = &DebugWriteEntireFile;
 
 #if DEBUG
     void *BaseAddress = (void *)Terabytes(2);
