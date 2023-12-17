@@ -72,6 +72,23 @@ void UpdateOffscreenBuffer(window_state *WindowState, offscreen_buffer *Buffer)
     Buffer->Pixels = calloc(Width * Height, sizeof(u32));
 }
 
+int GetWindowRefreshRate(SDL_Window *Window)
+{
+    SDL_DisplayMode Mode;
+    int DisplayIndex = SDL_GetWindowDisplayIndex(Window);
+
+    int DefaultRefreshRate = 60;
+    if (SDL_GetDesktopDisplayMode(DisplayIndex, &Mode) != 0)
+    {
+        return DefaultRefreshRate;
+    }
+    if (Mode.refresh_rate == 0)
+    {
+        return DefaultRefreshRate;
+    }
+    return Mode.refresh_rate;
+}
+
 void ProcessWindowEvent(SDL_WindowEvent *e, window_state *WindowState, offscreen_buffer *BackBuffer)
 {
     v2i *NewSize = &WindowState->Size;

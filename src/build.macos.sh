@@ -13,9 +13,10 @@ SDL_FLAGS="`sdl2-config --cflags --libs`"
 mkdir -p $BASE_DIR/build/macos
 pushd $BASE_DIR/build/macos
 
-# Create Game service
+echo "Creating game library"
 $CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -shared -o ./libgame.so -fPIC $BASE_DIR/src/game.cc 
 
+echo "Creating executable"
 # Create platform layer that uses platform agnostic Game
 $CC $COMMON_COMPILER_FLAGS $BUILD_FLAGS -o invaders $SDL_FLAGS -fPIC $BASE_DIR/src/main.cc
 

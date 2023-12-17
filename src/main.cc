@@ -37,23 +37,6 @@
 #include "debug/debug_input_recording.cc"
 #endif
 
-internal_func int GetWindowRefreshRate(SDL_Window *Window)
-{
-    SDL_DisplayMode Mode;
-    int DisplayIndex = SDL_GetWindowDisplayIndex(Window);
-
-    int DefaultRefreshRate = 60;
-    if (SDL_GetDesktopDisplayMode(DisplayIndex, &Mode) != 0)
-    {
-        return DefaultRefreshRate;
-    }
-    if (Mode.refresh_rate == 0)
-    {
-        return DefaultRefreshRate;
-    }
-    return Mode.refresh_rate;
-}
-
 int GameMain(int Argc, char *Args[])
 {
 #if DEBUG 
@@ -91,8 +74,8 @@ int GameMain(int Argc, char *Args[])
     UpdateOffscreenBuffer(&WindowState, &BackBuffer);
 
     game_memory GameMemory = {};
-    GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.PermanentStorageSize = Gigabytes(2);
+    GameMemory.TransientStorageSize = Megabytes(64);
     GameMemory.FreeFileMemory = &DebugFreeFileMemory;
     GameMemory.ReadEntireFile = &DebugReadEntireFile;
     GameMemory.WriteEntireFile = &DebugWriteEntireFile;
@@ -158,10 +141,10 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
     // Ticks per second for this CPU.
     u64 PerfCountFrequency = SDL_GetPerformanceFrequency();
 
-    // Administration to enforce a framerate of GameUpdateHz
     u64 StartCycleCount = __rdtsc();
 #endif
-
+    
+    // Administration to enforce a framerate of GameUpdateHz
     u64 StartTime = SDL_GetPerformanceCounter();
 
 #if DEBUG
@@ -203,9 +186,9 @@ memory_size TotalStorageSize = GameMemory.PermanentStorageSize + GameMemory.Tran
                 case SDL_KEYUP:
                 case SDL_KEYDOWN:
                 {
-                    #if DEBUG
+#if DEBUG
                     DebugHandleKeyEvent(e.key, &WindowState, &InputRecorder, NewKeyboardController);
-                    #endif
+#endif
                     ProcessKeyboardEvents(&e, GameState, NewKeyboardController);
                 } break;
             }
