@@ -7,6 +7,8 @@
 #include "debug_io.h"
 #endif
 
+#include "game.h"
+
 /**
  * LOADING
  */

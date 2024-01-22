@@ -1,7 +1,7 @@
 #ifndef OS_INPUT_H
 #define OS_INPUT_H
 
-#include "game.h"
+#include "types.h"
 
 struct game_button_state
 {

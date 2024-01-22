@@ -4,6 +4,8 @@
 #include "types.h"
 #include "defs.h"
 
+#include "game.h"
+
 internal_func void SimulatePlayerMovement(game_state *GameState, game_input *Input, v2i BufferSize);
 
 #endif // PLAYER_MOVEMENT_H

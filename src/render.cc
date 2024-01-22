@@ -52,7 +52,7 @@ internal_func void DrawClear(offscreen_buffer *Buffer, v2 Origin, v2i Size, u32 
 
 internal_func void DrawRectangle(offscreen_buffer *Buffer, coordinate_system System, u32 Color)
 {
-v2 Points[4] = {
+    v2 Points[4] = {
         System.Origin,
         System.Origin + System.XAxis,
         System.Origin + System.XAxis + System.YAxis,
