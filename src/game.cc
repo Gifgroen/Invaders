@@ -39,8 +39,7 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     Group->ElementsBase = (u8 *)PushSize(&GameState->Journal, Group->ElementsSpaceSize);
 
     v2 ScreenOrigin = V2(0.0f, 0.0f);
-    PushClearElement(Group, ScreenOrigin, Buffer->Size, 0xFFFFFF00);
-    PushOutlineElement(Group, ScreenOrigin, Buffer->Size, 8, 0xff00ff00);
+    PushClearElement(Group, ScreenOrigin, Buffer->Size, 0xffffff00);
 
     /* Simulate a player. */
     SimulatePlayerMovement(GameState, Input, Buffer->Size);
@@ -65,8 +64,8 @@ void GameUpdateAndRender(game_memory *GameMemory, offscreen_buffer *Buffer, game
     v2 OriginB = ScreenCenter + V2((ScreenCenter.width + (real32)BTexture->Size.width) * 0.5f, 0);
     PushTextureElement(Group, BTexture, V2(0.5f, 0.5f), OriginB, Rotation);
 
-    // TODO: the Draw call for Outline do not support rotation yet
     // PushOutlineElement(Group, V2(100.0f, 100.0), V2i(50, 50), 4, 0xff0000ff, Rotation);
+    PushOutlineElement(Group, V2(0.5f, 0.5f), V2(200.0f, 200.0), V2i(128, 128), 4, 0xffff0000, -Rotation);
 
     RenderToOutput(Group, Buffer);
 

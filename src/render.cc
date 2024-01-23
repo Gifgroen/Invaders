@@ -106,23 +106,61 @@ internal_func void DrawRectangle(offscreen_buffer *Buffer, coordinate_system Sys
     }
 }
 
-internal_func void DrawOutline(offscreen_buffer *Buffer, v2 Origin, v2i Size, u16 Thickness, u32 Color)
+internal_func void DrawOutline(offscreen_buffer *Buffer, coordinate_system System, u16 Thickness, u32 Color)
 {
-    // TOP
-    v2i HorizontalSize = V2i(Size.width, Thickness);
-    DrawClear(Buffer, Origin, HorizontalSize, Color);
+    v2 Points[4] = {
+        System.Origin,
+        System.Origin + System.XAxis,
+        System.Origin + System.XAxis + System.YAxis,
+        System.Origin + System.YAxis
+    };
+  
+    real32 xMin = Buffer->Size.width - 1;
+    real32 xMax = 0;
+    real32 yMin = Buffer->Size.height - 1;
+    real32 yMax = 0;
+    for (int i = 0; i < ArrayCount(Points); ++i)
+    {
+        v2 Point = Points[i];
+        if (Point.x < xMin)
+        {
+            xMin = Point.x;
+        }
+        if (Point.x > xMax)
+        {
+            xMax = Point.x;
+        }
+        if (Point.y < yMin)
+        {
+            yMin = Point.y;
+        }
+        if (Point.y > yMax)
+        {
+            yMax = Point.y;
+        }
+    }
 
-    v2i VerticalSize = V2i(Thickness, Size.height - 2*Thickness);
-    // Left
-    DrawClear(Buffer, V2(Origin.x, Origin.y + Thickness), VerticalSize, Color);
+    for (u32 Y = yMin; Y < yMax; ++Y)
+    {
+        for(u32 X = xMin; X < xMax; ++X)
+        {
+            u32 *Pixel = (u32*)Buffer->Pixels + Y * Buffer->Size.width + X;
 
-    // Right
-    v2 RightOrigin = V2(Origin.x + Size.width - Thickness, Origin.y);
-    DrawClear(Buffer,  V2(RightOrigin.x, RightOrigin.y + Thickness) , VerticalSize, Color);
+            // TODO: this can/should be optimised!
+            v2 Point = V2(X, Y);
+            v2 d = Point - System.Origin;
+            int Edge0 = Dot(d, -Perp(System.XAxis));
+            int Edge1 = Dot(d - System.XAxis, -Perp(System.YAxis));
+            int Edge2 = Dot(d - System.XAxis - System.YAxis, Perp(System.XAxis));
+            int Edge3 = Dot(d - System.YAxis, Perp(System.YAxis));
 
-    // Bottom
-    v2 BottomOrigin = V2(Origin.x, Origin.y + Size.height - Thickness);
-    DrawClear(Buffer, BottomOrigin, HorizontalSize, Color);
+            // TODO: need to consider thickness for fill; instead of entire rect.
+            if (Edge0 < 0 && Edge1 < 0 && Edge2 < 0 && Edge3 < 0) 
+            {
+                *Pixel = Color;
+            }
+        }
+    }
 }
 
 internal_func void DrawTexture(offscreen_buffer *Buffer, coordinate_system System, loaded_texture *Texture, u32 Color = 0xff0000ff)
@@ -239,7 +277,7 @@ internal_func void PushRectElement(render_group *Group, v2 Align, v2 Origin, v2i
     rectangle_element *Element = (rectangle_element*)PushRenderElement(Group, sizeof(rectangle_element));
     Element->Type = element_type_Rectangle;
 
-        // TODO: this could be a default value somewhere?
+    // TODO: this could be a default value somewhere?
     coordinate_system Basis = {};
     // Include Rotation
     Basis.XAxis = V2(cosf(Rotation), sinf(Rotation));
@@ -254,7 +292,7 @@ internal_func void PushRectElement(render_group *Group, v2 Align, v2 Origin, v2i
     Element->Color = Color;
 }
 
-internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, u16 Thickness, u32 Color, real32 Rotation = 0.0f)
+internal_func void PushOutlineElement(render_group *Group, v2 Align, v2 Origin, v2i Size, u16 Thickness, u32 Color, real32 Rotation = 0.0f)
 {
     outline_element *Element = (outline_element *)PushRenderElement(Group, sizeof(outline_element));
     Element->Type = element_type_Outline;
@@ -267,7 +305,8 @@ internal_func void PushOutlineElement(render_group *Group, v2 Origin, v2i Size, 
     // Include Position and Scale
     Basis.XAxis *= (real32)Size.width;
     Basis.YAxis *= (real32)Size.height;
-    Basis.Origin = Origin;// - Basis.XAxis * 0.5f - Basis.YAxis * 0.5f; // TODO: extract hardcoded center align
+    // Basis.Origin = Origin;// - Basis.XAxis * 0.5f - Basis.YAxis * 0.5f; // TODO: extract hardcoded center align
+    Basis.Origin = Origin - Basis.XAxis * Align.x - Basis.YAxis * Align.y; // TODO: figure out and extract hardcoded center align
 
     Element->Basis = Basis;
 
@@ -323,8 +362,8 @@ internal_func void RenderToOutput(render_group *Group, offscreen_buffer *Buffer)
             {
                 outline_element *Element = (outline_element *)Type;
                 coordinate_system Basis = Element->Basis;
-                v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
-                DrawOutline(Buffer, Basis.Origin, Size, Element->Thickness, Element->Color);
+                // v2i Size = V2i(Basis.XAxis.width, Basis.YAxis.height);
+                DrawOutline(Buffer, Basis, Element->Thickness, Element->Color);
 
                 ElementOffset += sizeof(*Element);
             } break;

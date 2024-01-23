@@ -51,4 +51,8 @@ struct render_group
     u8 *ElementsBase;
 };
 
+void PushClearElement(render_group *Group, v2 Origin, v2 XAxis, v2 YAxis, u32 Color);
+void PushRectangleElement(render_group *Group, v2 Origin, v2 XAxis, v2 YAxis, u32 Color);
+void PushOutlineElement(render_group *Group, v2 Align, v2 Origin, v2 XAxis, v2 YAxis, u16 Thickness, u32 Color);
+
 #endif // RENDER_H
